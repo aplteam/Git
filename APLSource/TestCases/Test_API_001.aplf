@@ -1,0 +1,18 @@
+ R←Test_API_001(stopFlag batchFlag);⎕TRAP;qdmx
+⍝ Runs "ListBranches"
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ :Trap 0
+     {}G.ListBranches'Does-not-exist'
+     →T.FailsIf 1
+ :Else
+     qdmx←⎕DMX
+     →T.PassesIf'No directory provided'≡qdmx.EM
+ :EndTrap
+
+ →T.PassesIf(,⊂'* main')≡G.ListBranches ∆Folder1
+ →T.PassesIf(,⊂'* main')≡G.ListBranches'#.Proj_2'
+
+ R←T._OK
+⍝Done

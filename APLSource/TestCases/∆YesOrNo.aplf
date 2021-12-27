@@ -1,0 +1,8 @@
+ yesOrNo←{default}∆YesOrNo question
+⍝ Asks a simple question and allows just "Yes" or "No" as answers.
+⍝ You may specify a default via the optional left argument which when specified
+⍝ rules what happens when the user just presses <enter>.
+⍝ `default` must be either 1 (yes) or 0 (no).
+⍝ Note that this function does NOT work as expected when traced!
+ default←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'default'
+ yesOrNo←default ##.Git.U.YesOrNo question

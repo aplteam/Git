@@ -1,0 +1,60 @@
+ r←{noOf}LogForBranch y;branchName;noOf;cmd;rc;more;path;⎕TRAP
+⍝ Returns Log information for a specific branch.\\
+⍝ Returns a matrix with four columns:
+⍝  1. Commit hash
+⍝  2. Committer
+⍝  3. Commit date
+⍝  4. Message\\
+⍝ The matrix will have zero to many rows.\\
+⍝ `y` can be one of:
+⍝  1. A simple character vector. This is interpreted as a branch name
+⍝  2. A vector of length two:
+⍝     1. A simple character vector. This is interpreted as a branch name
+⍝     2. A positive integer. This limits the number of commits to be returned.\\
+⍝        Returns always the **last** (or youngest) `noOf` commits.
+⍝ In case `branchName` is empty it's reporting for the current branch.\\
+⍝ By default a matrix with four columns is returned:
+⍝  1. Hash of the commit
+⍝  2. User ID
+⍝  3. Timestamp
+⍝  4. Message\\
+⍝ `y` must be one of:
+⍝ * If `y` is simple:
+⍝   * Fully qualfied name of a namespace  that is an opened Cider project
+⍝   * Fully qualified path to a Git-managed project
+⍝ * If `y` is nested:
+⍝   1. See above
+⍝   2. Name of the branch
+⍝ If the branch name is omitted the function works on the current branch.
+ ⎕TRAP←(811 'E' '⎕DMX.EM ⎕signal 811')(0 'N')
+ noOf←{0<⎕NC ⍵:⍎⍵ ⋄ 0}'noOf'
+ r←''
+ :If (≡y)∊0 1
+     path←U.GetProjectPath y
+     branchName←CurrentBranch y
+ :Else
+     (y branchName)←2↑y
+     path←U.GetProjectPath y
+ :EndIf
+ :If 0=noOf
+     :If (⊂branchName)∊'main' 'master'
+         cmd←'log --first-parent ',branchName,' --pretty=format:"',U.GetLogFormat,'"'
+     :Else
+         cmd←'log main..',branchName,' --pretty=format:"',U.GetLogFormat,'"'
+     :EndIf
+ :ElseIf 1≠≢noOf
+ :OrIf ~(⎕DR noOf)∊83 163
+     'Invalid: "noOf": must be a positive integer'⎕SIGNAL 11
+ :Else
+     :If (⊂branchName)∊'main' 'master'
+         cmd←'log --first-parent -',(⍕|noOf),' ',branchName,' --pretty=format:"',U.GetLogFormat,'"'
+     :Else
+         cmd←'log -',(⍕|noOf),' main..',branchName,' --pretty=format:"',U.GetLogFormat,'"'
+     :EndIf
+ :EndIf
+ (rc more r)←path U.RunGitCommand cmd
+ more U.Assert 0=rc
+ :If 0<≢r
+     r←↑U.FormatLog r
+ :EndIf
+⍝Done

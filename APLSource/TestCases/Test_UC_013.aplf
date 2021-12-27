@@ -1,0 +1,30 @@
+ R←Test_UC_013(stopFlag batchFlag);⎕TRAP;rc;msg;stop;result
+⍝ Runs ]GoToGitHub
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ :If batchFlag
+     R←T._NoBatchTest
+     :Return
+ :EndIf
+
+ 0 0⍴⍞,0/⍞←'This test needs you: Please open an empty browser window and then press <enter> to continue'
+
+ stop←0
+ (rc msg result)←stop ∆UCMD'GoToGitHub aplteam/Git'
+ msg Assert rc=0
+
+ (rc msg result)←stop ∆UCMD'GoToGitHub https://github.com/aplteam/Git'
+ msg Assert rc=0
+
+ (rc msg result)←stop ∆UCMD'GoToGitHub #.Git'
+ msg Assert rc=0
+
+ 0 0⍴⍞,0/⍞←'When asked to select a project choose Git; press <enter> to continue'
+ (rc msg result)←stop ∆UCMD'GoToGitHub'
+ msg Assert rc=0
+
+ →T.PassesIf 1 ∆YesOrNo'Was https://github.com/aplteam/Git opened four times in your default browser?'
+
+ R←T._OK
+⍝Done

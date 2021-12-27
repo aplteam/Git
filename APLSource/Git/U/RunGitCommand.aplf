@@ -1,0 +1,6 @@
+ r←{folder}RunGitCommand command;cmd;buff
+ folder←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'folder'
+ cmd←'-C "',folder,'" ',command
+ buff←RunProcess'git'cmd
+ r←buff.(ExitCode StdErr StdOut)
+⍝Done

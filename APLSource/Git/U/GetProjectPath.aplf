@@ -1,0 +1,25 @@
+ path←{doNotCheckForGitProject}GetProjectPath y;qdmx
+⍝ `y` must be one of:
+⍝   * Fully qualfied name of a namespace  that is an opened Cider project
+⍝   * Fully qualified path to a Git-managed project
+⍝ Returns a path to a project or ''.
+⍝ Checks by default whether y points to a Git-manages project, but that can be suppressed
+⍝ by specifying a 1 as left argument which is useful for, say, OpenGitShell.
+ y←⍕y               ⍝ In case it's a ref
+ doNotCheckForGitProject←{0<⎕NC ⍵:⍎⍵ ⋄ 0}'doNotCheckForGitProject'
+ :If (⊃y)∊'#⎕'
+     path←##.GetPathFromProject{⍵/⍨~{(∧\⍵)∨⌽∧\⌽⍵}' '=⍵}y
+ :Else
+     path←{⍵/⍨~{(∧\⍵)∨⌽∧\⌽⍵}' '=⍵}y
+ :EndIf
+ 'Not a project?!'⎕SIGNAL 811/⍨0=≢∊path
+ :If ~doNotCheckForGitProject
+     :Trap 0
+         :If ~##.IsGitProject path
+             811 ⎕SIGNAL⍨'Is not a Git-manged project: ',path
+         :EndIf
+     :Else
+         qdmx←⎕DMX
+         811 ⎕SIGNAL⍨qdmx.EM
+     :EndTrap
+ :EndIf

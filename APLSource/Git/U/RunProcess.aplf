@@ -1,0 +1,33 @@
+ {r}←{format}RunProcess(EXE data);⎕IO;⎕USING;p;i;re;ro;t;op;rtc;pfn
+     ⍝ ⍺ ←→  Format result like ⎕CMD or not
+     ⍝ ⍵[0] ←→ Executable
+     ⍝ ⍵[1] ←→ Argument
+ ⎕IO←0
+ format←{0<⎕NC ⍵:⍎⍵ ⋄ 1}'format'
+ r←⎕NS''
+ ⎕USING←'System' 'System.IO' 'System.Diagnostics,System.dll'
+ p←⎕NEW Process
+ i←p.StartInfo
+ i.FileName←EXE
+ i.Arguments←data
+ i.RedirectStandardOutput←1
+ i.RedirectStandardInput←1
+ i.RedirectStandardError←1
+ i.UseShellExecute←0
+ i.CreateNoWindow←1
+ {}p.Start ⍬
+ re←⎕NEW StreamReader p.StandardError.BaseStream
+ ro←⎕NEW StreamReader p.StandardOutput.BaseStream
+ t←r{⍺.StdErr←⍵.ReadToEnd}&re
+ r.StdOut←ro.ReadToEnd
+ op←{6::0 ⋄ z←⍺⍺ ⍵}
+ {}p.WaitForExit op ⍬
+ {}⎕TSYNC op t
+ r.ExitCode←p.ExitCode
+ :If format
+     rtc←{' '@((⎕UCS 9)∘=)⍵}
+     pfn←{⍵⊆⍨~⍵∊⎕UCS 10 13}
+     r.StdOut←pfn rtc r.StdOut
+     r.StdErr←pfn rtc r.StdErr
+ :EndIf
+⍝Done

@@ -1,0 +1,1 @@
+∆RemoveTrailingSlash←{⍵↓⍨¯1×(¯1↑⍵)∊'/\'}

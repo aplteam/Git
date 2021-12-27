@@ -1,0 +1,17 @@
+  {r}←GoToGitHub y;url;ref
+⍝ Opens the homepage of the current project on GitHub.\\
+⍝ `y` can be either the name of a project (like "Fire") or anything that `EstablishProject`
+⍝ can make sense of; see `EstablishProject` for details. In the former case the current
+⍝ directory must be compatible with the name given.\\
+ r←⍬
+ :If '/'∊y
+     url←y
+     :If ~':'∊url
+         url←'https://github.com/',url
+     :EndIf
+ :Else
+     ref←⍎y
+     'Invalid argument'U.Assert 9=ref.⎕NC'CiderConfig'
+     url←ref.CiderConfig.CIDER.info_url
+ :EndIf
+ {}A.GoToWebPage url

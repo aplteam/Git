@@ -1,0 +1,16 @@
+ R←Test_API_009(stopFlag batchFlag);⎕TRAP;result
+⍝ Runs "ChangeLog"
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ result←'#.Git'G.ChangeLog'#.Git.Git.Add'
+ →T.PassesIf 0<≢result
+
+ result←'#.Git'G.ChangeLog'Git.Add'
+ →T.PassesIf 0<≢result
+
+ result←G.ChangeLog'file://',##.CiderConfig.HOME,'/APLSource/Git/Add.aplf'
+ →T.PassesIf 0<≢result
+
+ R←T._OK
+⍝Done
