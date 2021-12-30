@@ -1,4 +1,4 @@
- R←Test_UC_013(stopFlag batchFlag);⎕TRAP;rc;msg;stop;result
+ R←Test_UC_013(stopFlag batchFlag);⎕TRAP;rc;msg;stop;result;flag;noOf
 ⍝ Runs ]GoToGitHub
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
@@ -24,7 +24,13 @@
  (rc msg result)←stop ∆UCMD'GoToGitHub'
  msg Assert rc=0
 
- →T.PassesIf 1 ∆YesOrNo'Was https://github.com/aplteam/Git opened four times in your default browser?'
+ :If flag←(⊂'git')∊{⍵[;4]}⎕SE.Cider.ListOpenProjects 1  ⍝ There might well be no such alias!
+     (rc msg result)←stop ∆UCMD'GoToGitHub [git]'
+     msg Assert rc=0
+ :EndIf
+
+ noOf←4+flag
+ →T.PassesIf 1 ∆YesOrNo'Was https://github.com/aplteam/Git opened ',(⍕noOf),' times in your default browser?'
 
  R←T._OK
 ⍝Done

@@ -11,7 +11,7 @@
  0 0⍴⍞,0/⍞←'This test needs you: it opens a Git shell in Git''s project directory. Press <enter> to continue'
 
  stop←0
- (rc msg buff)←stop ∆UCMD'OpenGitShell "file://',∆Folder2,'"'
+ (rc msg buff)←stop ∆UCMD'OpenGitShell "',∆Folder2,'"'
  msg Assert rc=0
  →T.PassesIf 1 ∆YesOrNo'Was the shell opened in ',∆Folder2,'?'
 

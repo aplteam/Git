@@ -4,11 +4,11 @@
  R←T._Failed
 
  stop←0
- (rc msg result)←stop ∆UCMD'ListBranches "file://',∆Folder1,'"'
+ (rc msg result)←stop ∆UCMD'ListBranches "',∆Folder1,'"'
  msg Assert rc=0
  →T.PassesIf(⍪⊂'* main')≡result
 
- (rc msg result)←stop ∆UCMD'ListBranches "file://',∆Folder2,'"'
+ (rc msg result)←stop ∆UCMD'ListBranches "',∆Folder2,'"'
  msg Assert rc=0
  →T.PassesIf(⍪⊂'* main')≡result
 
@@ -24,5 +24,5 @@
  R←T._OK
 
 ∆TidyUp:
- 1 ⎕SE.Git.SetDefaultProject''
+ {}⎕SE.Git.SetDefaultProject''
 ⍝Done

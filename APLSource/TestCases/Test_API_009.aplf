@@ -9,7 +9,7 @@
  result←'#.Git'G.ChangeLog'Git.Add'
  →T.PassesIf 0<≢result
 
- result←G.ChangeLog'file://',##.CiderConfig.HOME,'/APLSource/Git/Add.aplf'
+ result←G.ChangeLog ##.CiderConfig.HOME,'/APLSource/Git/Add.aplf'
  →T.PassesIf 0<≢result
 
  R←T._OK

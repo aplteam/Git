@@ -1,5 +1,5 @@
  {r}←SetDefaultProject y;list;row;space;folder;DEFAULT_PROJECT_was
-⍝ `y` may be either the name of a namespace or a folder (starting with "file://").\\
+⍝ `y` may be either the name of a namespace or a folder.\\
 ⍝ That defines an opened Cider project; if it does not an error is thrown.\\
 ⍝  * In case `y` is '?' the user is presented a list of opened Cider projects to select from
 ⍝  * In case `y` is empty DEFAULT_PROJECT←'' is executed
@@ -8,15 +8,15 @@
  DEFAULT_PROJECT←{0<⎕NC ⍵:DEFAULT_PROJECT ⋄ ''}'DEFAULT_PROJECT'    ⍝ Initalise the default project as undefined
  :If 0=≢y←⍕y
      r←DEFAULT_PROJECT←''
- :ElseIf (,'?')≡,y
+ :ElseIf (,'?')≡,y~'[]'
      DEFAULT_PROJECT_was←DEFAULT_PROJECT
      DEFAULT_PROJECT←''
      :If 0=≢r←DEFAULT_PROJECT←EstablishProject''
          r←DEFAULT_PROJECT←DEFAULT_PROJECT_was                      ⍝ User did cancel, so we restore the original setting
      :EndIf
  :Else
-     :If 'file://'{⍺≡(≢⍺)↑⍵}y
-         folder←F.EnforceSlash(≢'file://')↓y
+     :If ∨/'/\:'∊y
+         folder←F.EnforceSlash y
          row←(F.EnforceSlash¨list[;2])⍳⊂folder
      :Else
          '⍵ is not a namespace'U.Assert 9=⎕NC y

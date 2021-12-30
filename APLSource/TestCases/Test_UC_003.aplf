@@ -6,12 +6,12 @@
  ∆ModifyCounter ∆Folder1
 
  stop←0
- (rc msg result)←stop ∆UCMD'Status file://',∆Folder1
+ (rc msg result)←stop ∆UCMD'Status ',∆Folder1
  msg Assert rc=0
  →T.PassesIf∨/'APLSource/Counter.aplf'⍷∊result
 
  ∆ModifyCounter ∆Folder2
- (rc msg result)←stop ∆UCMD'Status "file://',∆Folder2,'"'
+ (rc msg result)←stop ∆UCMD'Status "',∆Folder2,'"'
  msg Assert rc=0
  →T.PassesIf∨/'APLSource/Counter.aplf'⍷∊result
 

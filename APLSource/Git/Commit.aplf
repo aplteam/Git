@@ -1,5 +1,5 @@
  r←{msg}Commit y;nm;project;buff;rc;⎕TRAP;cb;path;cmd;msg_
-⍝ Commits changes.\\
+⍝ Commit changes.\\
 ⍝ If the current branch is "main" (or "master") then `msg` **_must not_** be empty and should carry a meaningful message.
 ⍝ Otherwise `msg` may be empty but will become three dots (`...`).\\
 ⍝ `y` must be one of:
@@ -18,6 +18,10 @@
  msg_←U.MassageMsg msg
  cmd←'commit -m "',msg_,'"'
  (rc msg buff)←path U.RunGitCommand cmd
- msg U.Assert 0=rc
- r←buff
+ :If ∨/'nothing to commit, working tree clean'⍷∊buff
+     r←buff
+ :Else
+     msg U.Assert 0=rc
+     r←buff
+ :EndIf
 ⍝Done

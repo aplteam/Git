@@ -5,11 +5,11 @@
 
  stop←0
  (rc msg result)←stop ∆UCMD'Commit Does-not-exist'
- →T.PassesIf∨/'⍵ does not point to any opened Cider project'⍷msg
+ →T.PassesIf∨/'<Does-not-exist> not found on disk'⍷msg
 
- result←stop ∆UCMD'Add . -project="file://',∆Folder1,'"'
+ result←stop ∆UCMD'Add . -project="',∆Folder1,'"'
 
- (rc msg result)←stop ∆UCMD'Commit "file://',∆Folder1,'" -m="It''s a message" -add'
+ (rc msg result)←stop ∆UCMD'Commit "',∆Folder1,'" -m="It''s a message" -add'
  msg Assert rc=0
  →T.PassesIf 2≤≢result
  →T.PassesIf 0∧.<≢¨result

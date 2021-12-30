@@ -11,7 +11,7 @@
  0 0⍴⍞,0/⍞←'This test needs you: you will be given a choice: select #.Git! Press <enter> to continue'
 
  stop←0
- (rc msg result)←stop ∆UCMD'ChangeLog #.Git.Git.Add #.Git'
+ (rc msg result)←stop ∆UCMD'ChangeLog #.Git.Git.Add -project=#.Git'
  msg Assert rc=0
  →T.PassesIf 0<≢result
 

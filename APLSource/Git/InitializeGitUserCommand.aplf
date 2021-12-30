@@ -1,4 +1,4 @@
- {r}←InitializeGit dummy
+  {r}←InitializeGitUserCommand dummy
 ⍝ Propagate refs and set global ∆TestFlag
  r←⍬
  :If 0<⎕NC'A'                                   ⍝ It's a Tatin package then
@@ -6,8 +6,8 @@
      U.F←F
  :Else                                          ⍝ It's the Git project
      :If '⎕'=⊃⊃⎕XSI
-         U.A←A←⎕SE.APLTreeUtils2
-         U.F←F←⎕SE.FilesAndDirs
+         U.A←A←⎕SE._Git.APLSource.APLTreeUtils2
+         U.F←F←⎕SE._Git.APLSource.FilesAndDirs
      :Else
          U.A←A←##.APLTreeUtils2
          U.F←F←##.FilesAndDirs

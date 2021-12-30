@@ -4,11 +4,11 @@
  R←T._Failed
 
  stop←0
- (rc msg result)←stop ∆UCMD'IsGitProject "file://',∆Folder1,'"'
+ (rc msg result)←stop ∆UCMD'IsGitProject "',∆Folder1,'"'
  msg Assert rc=0
  →T.PassesIf 'yes'≡result
 
- (rc msg result)←stop ∆UCMD'IsGitProject "file://',F.GetTempPath,'"'
+ (rc msg result)←stop ∆UCMD'IsGitProject "',F.GetTempPath,'"'
  msg Assert rc=0
  →T.PassesIf 'no'≡result
 

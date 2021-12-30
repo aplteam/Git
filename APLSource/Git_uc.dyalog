@@ -1,10 +1,11 @@
-﻿:Class Git_uc
+:Class Git_uc
 ⍝ User Command class for the project manager "Git"
 ⍝ Kai Jaeger ⋄ APL Team Ltd
-⍝ Version 0.30.0
+⍝ Version 0.1.0
 
     ⎕IO←1 ⋄ ⎕ML←1 ⋄ ⎕WX←3
     MinimumVersionOfDyalog←'18.0'
+    _errno←811
 
     ∇ r←List;c ⍝ this function usually returns 1 or more namespaces (here only 1)
       :Access Shared Public
@@ -31,7 +32,7 @@
           c.Name←'Commit'
           c.Desc←'Performs a commit on the current branch'
           c.Group←'Git'
-          c.Parse←'1s -m='
+          c.Parse←'1s -m= -add'
           c._Project←1
           r,←c
      
@@ -41,6 +42,14 @@
           c.Group←'Git'
           c.Parse←'1s'
           c._Project←1
+          r,←c
+     
+          c←⎕NS''
+          c.Name←'GetDefaultProject'
+          c.Desc←'Returns namespace and folder of the current default project, if any'
+          c.Group←'Git'
+          c.Parse←'0'
+          c._Project←0
           r,←c
      
           c←⎕NS''
@@ -74,26 +83,6 @@
           c.Parse←'1s'
           c._Project←1
           r,←c
-     
-          :If 0
-              c←⎕NS''
-              c.Name←'Log'
-              c.Desc←''
-              c.Group←'Git'
-              c.Parse←'1s'
-              c._Project←1
-              r,←c
-          :EndIf
-     
-          :If 0
-              c←⎕NS''
-              c.Name←'LogForBranch'
-              c.Desc←''
-              c.Group←'Git'
-              c.Parse←'1 -project='
-              c._Project←0
-              r,←c
-          :EndIf⍝
      
           c←⎕NS''
           c.Name←'OpenGitShell'
@@ -134,16 +123,30 @@
       r←0 0⍴''
       ('Git needs at least version ',MinimumVersionOfDyalog,' of Dyalog APL')Assert AtLeastVersion⊃(//)⎕VFI MinimumVersionOfDyalog
       G←LoadGitCode ⍬
-      :If ({⍵⊃⍨⍸⍵.Name≡¨⊂Cmd}List)._Project
-      :AndIf 0≢Args._1
-          (space folder)←GetSpaceAndFolder Args._1
-      :ElseIf 2=Args.⎕NC'project'
-      :AndIf 0<≢Args.project
-          (space folder)←GetSpaceAndFolder Args.project
-      :Else
-          (space folder)←G.EstablishProject''
+      :If ~(⊂Cmd)∊'GetDefaultProject' 'SetDefaultProject' 'Version'
+          :If ({⍵⊃⍨⍸⍵.Name≡¨⊂Cmd}List)._Project
+          :AndIf 0≢Args._1
+              (space folder)←GetSpaceAndFolder Args._1
+          :ElseIf 2=Args.⎕NC'project'
+          :AndIf (,0)≢,Args.project
+          :AndIf 0<≢Args.project
+              (space folder)←GetSpaceAndFolder Args.project
+          :Else
+              (space folder)←G.EstablishProject''
+          :EndIf
+          :If 0=≢space,folder
+              :If (⊂Cmd)∊'OpenGitShell' ''
+              :AndIf ⎕NEXISTS'./.git'
+                  folder←'./'
+              :Else
+                  r←'No project proveded/selected'
+                  :Return
+              :EndIf
+          :EndIf
+          :If ~(⊂Cmd)∊'GoToGitHub' ''
+              ('<',folder,'> not found on disk')Assert ⎕NEXISTS folder
+          :EndIf
       :EndIf
-      'Could not identify the given project'⎕SIGNAL 11/⍨0=≢space,folder
       :Select ⎕C Cmd
       :Case ⎕C'Add'
           r←Add space folder Args
@@ -153,8 +156,11 @@
           r←Commit space folder Args
       :Case ⎕C'CurrentBranch'
           r←CurrentBranch space folder Args
+      :Case ⎕C'GetDefaultProject'
+          r←GetDefaultProject ⍬
       :Case ⎕C'GoToGitHub'
           :If 0=⎕NC'space'
+          :OrIf 0=≢space
               r←GoToGitHub Args
           :Else
               r←space GoToGitHub Args
@@ -165,26 +171,29 @@
           r←IsGitProject space folder Args
       :Case ⎕C'ListBranches'
           r←ListBranches space folder Args
-      :Case ⎕C'Log'
-          ∘∘∘
-      :Case ⎕C'LogForBranch'
-          ∘∘∘
-      :Case ⎕C'RefLog'
-          ∘∘∘
       :Case ⎕C'OpenGitShell'
           r←OpenGitShell space folder Args
+      :Case ⎕C'SetDefaultProject'
+          r←G.SetDefaultProject{⍵/⍨0≠⍵}Args._1
       :Case ⎕C'Status'
           r←⍪Status space folder Args
+      :Case ⎕C'Version'
+          r←⊃{⍺,' from ',⍵}/1↓⎕SE._Git.APLSource.Version
       :Else
           ∘∘∘ ⍝ Huh?!
       :EndSelect
+    ∇
+
+    ∇ r←GetDefaultProject dummy
+      r←G.GetDefaultProject dummy
     ∇
 
     ∇ r←Add(space folder args);filter
       'Not a URL on GitHub'Assert 0<≢args._1
       filter←args._1
       'Invalid filter'Assert 0<≢filter
-      r←filter G.Add space
+      {}filter G.Add space
+      r←0 0⍴''
     ∇
 
     ∇ r←{space}GoToGitHub args
@@ -196,9 +205,10 @@
       :EndIf
     ∇
 
-    ∇ r←ChangeLog(space folder args);msg;name
+    ∇ r←ChangeLog(space folder args);msg;name;⎕TRAP
       name←args._1
       :If ~(⊃name)∊'#⎕'
+          ⎕TRAP←0 'S'
           ∘∘∘
       :EndIf
       ('Not an APL object: ',name)Assert 0<⎕NC name
@@ -209,8 +219,16 @@
       r←⎕SE.Git.GoToGithub folder msg
     ∇
 
-    ∇ r←IsDirty(space folder args)
-      r←(1+⎕SE.Git.IsDirty folder)⊃'no' 'yes'
+    ∇ r←IsDirty(space folder args);int
+      int←⎕SE.Git.IsDirty folder
+      :Select ⊃int
+      :Case 1
+          r←'Project ',space,' (',folder,') has uncommitted changes but no untracked files'
+      :Case 2
+          r←'Project ',space,' (',folder,') has untracked files but no uncommited changes'
+      :Case 3
+          r←'Project ',space,' (',folder,') has both uncommitted changes and untracked files'
+      :EndSelect
     ∇
 
     ∇ r←IsGitProject(space folder args)
@@ -225,10 +243,11 @@
       r←⎕SE.Git.CurrentBranch folder
     ∇
 
-    ∇ r←Commit(space folder args);msg;ref;branch;rc;data
-      :If ⎕SE.Git.IsDirty space
-          branch←⎕SE.Git.CurrentBranch folder
-          :If 1 YesOrNo'Branch "',branch,'" is dirty - excute Git''s "Add ." command?'
+    ∇ r←Commit(space folder args);msg;ref;branch;rc;data;flag
+      branch←⎕SE.Git.CurrentBranch folder
+      :If (⎕SE.Git.IsDirty space)∊2 3
+          :If 1=args.add
+          :OrIf 1 YesOrNo'Branch "',branch,'" is dirty - excute Git''s "Add ." command?'
               (rc msg data)←folder ⎕SE.Git.##.U.RunGitCommand'add .'
               msg Assert 0=rc
           :Else
@@ -236,12 +255,28 @@
               :Return
           :EndIf
       :EndIf
-      :If 0<≢Args.m
+      :If (,0)≢,Args.m
+      :AndIf 0<≢Args.m
           msg←Args.m
+          :If (⊂branch)∊'main' 'master'
+              ('You MUST specify a message for ',branch)Assert 0<≢msg~'.'
+          :EndIf
       :Else
-          ref←⎕NS''
-          ref.msg←'' ''
-          ref.⎕ED'msg'
+          flag←0
+          :Repeat
+              ref←⎕NS''
+              ref.msg←'' ''
+              ref.⎕ED'msg'
+              msg←ref.msg{⍺/⍨~(⌽∧\0=⌽⍵)∨(∧\0=⍵)}≢¨ref.msg
+              :If (⊂branch)∊'main' 'master'
+              :AndIf 0=≢(∊msg)~'.'
+                  :If 0=1 YesOrNo'You MUST specify a meaningful message for "',branch,'"; try again (no=cancel) ?'
+                      r←'Commit cancelled by user'
+                      :Return
+                  :EndIf
+              :EndIf
+              msg←{0=≢⍵:'...' ⋄ ⍵}msg
+          :Until flag
       :EndIf
       r←msg ⎕SE.Git.Commit folder
     ∇
@@ -266,25 +301,23 @@
           :Case ⎕C'ChangeLog'
               r,←⊂']Git.ChangeLog <APL-object> -project'
           :Case ⎕C'Commit'
-              r,←⊂']Git.Commit [project] -m='
+              r,←⊂']Git.Commit [project] -m= -add'
           :Case ⎕C'CurrentBranch'
               r,←⊂']Git.CurrenBranch [project]'
+          :Case ⎕C'GetDefaultProject'
+              r,←⊂']GetDefaultProject'
           :Case ⎕C'GoToGitHub'
-              r,←⊂']Git.OpenGitHub [project]'
+              r,←⊂']Git.OpenGitHub [space|project|<group>/<project-name>|[alias]]'
           :Case ⎕C'IsDirty'
               r,←⊂']Git.IsDirty [project]'
           :Case ⎕C'IsGitProject'
               r,←⊂']Git.IsGitProject [project]'
           :Case ⎕C'ListBranches'
               r,←⊂']Git.ListBranches [project]'
-          :Case ⎕C'Log'
-              r,←⊂''
-          :Case ⎕C'LogForBranch'
-              r,←⊂''
           :Case ⎕C'OpenGitShell [project]'
               r,←⊂']Git.OpenGitShell'
           :Case ⎕C'SetDefaultProject'
-              r,←⊂']Git.SetDefaultProject [space|file://folder]'
+              r,←⊂']Git.SetDefaultProject [space|folder]'
           :Case ⎕C'Status'
               r,←⊂']Git.Status -short -path= -ns='
           :Else
@@ -301,6 +334,10 @@
               r,←⊂'The branch must not be dirty (see ]Git.IsDirty) but if it is anyway the user will be'
               r,←⊂'asked whether she wants to add all files first.'
               r,←⊂''
+              r,←⊂'-add When the project is dirty then without the -add flag the user will be questioned'
+              r,←⊂'     whether a "git add ." command should be issued first. -add tells the user command'
+              r,←⊂'     to do that in any case, without questioning the user.'
+              r,←⊂''
               r,←⊂'-m=  If this is specified it is accepted as the message.'
               r,←⊂'     If it is not specified then the command will open an edit window for the message.'
               r,←⊂''
@@ -312,14 +349,26 @@
               r,←⊂'Returns the name of the current branch'
               r,←⊂''
               r,←AddProjectOptions ⍬
+          :Case ⎕C'GetDefaultProject'
+              r,←⊂'Returns the namespace and the folder if there is a default project defined.'
+              r,←⊂'See also ]Git.SetDefaultProject'
           :Case ⎕C'GoToGitHub'
               r,←⊂'Opens project in your default browser as, say:'
               r,←⊂'https://github.com/aplteam/Git'
               r,←⊂''
+              r,←⊂'The required project can be specified in a number of ways:'
+              r,←⊂' * A URL like https://github.com/aplteam.Git'
+              r,←⊂' * A group and a project name like aplteam/Git'
+              r,←⊂' * A fully qualified namespace name of an opened Cider project like'
+              r,←⊂'   #.Git'
+              r,←⊂' * A Cider alias of an opened Cider project like [git]'
               r,←AddProjectOptions ⍬
           :Case ⎕C'IsDirty'
-              r,←⊂'Returns:'
+              r,←⊂'Returns one of:'
               r,←⊂'Project <name> (<path) is [not] dirty'
+              r,←⊂'Project <name> (<path) has uncommitted changes but no untracked files'
+              r,←⊂'Project <name> (<path) has untracked files but no uncommited changes'
+              r,←⊂'Project <name> (<path) has both uncommitted changes and untracked files'
               r,←⊂''
               r,←AddProjectOptions ⍬
           :Case ⎕C'IsGitProject'
@@ -341,12 +390,14 @@
               r,←⊂''
               r,←AddProjectOptions ⍬
           :Case ⎕C'OpenGitShell'
-              r,←⊂'Opens a Git Bash shell'
+              r,←⊂'Opens a Git Bash shell, either on the given project or, if no project was provided, the'
+              r,←⊂'current directory if that carries a folder .git/. If it does not an error is thrown'
               r,←⊂''
               r,←AddProjectOptions ⍬
           :Case ⎕C'SetDefaultProject'
               r,←⊂'Use this to specify a default project.'
               r,←⊂'Commands that require a project will act on the default project in case it was set.'
+              r,←⊂'See also ]Git.GetDefaultProject'
           :Case ⎕C'Status'
               r,←⊂'Reports the status from Git''s perspective.'
               r,←⊂'By default a verbose report is printed.'
@@ -374,7 +425,6 @@
       r,←⊂' * The fully qualified path to a namespace that is an opened Cider project'
       r,←⊂' * The path to a git-managed folder'
       r,←⊂'   In this case it does not have to be an open Cider project, and not even a closed one.'
-      r,←⊂'   It must start with file://'
     ∇
 
     ∇ r←AtLeastVersion min;currentVersion
@@ -385,11 +435,11 @@
       ⍝ You may specify a version different from the currently running one via `⍺`:\\
       ⍝ `1 1 0 0 ←→ 17 AtLeastVersion¨16 17 17.1 18`
       currentVersion←{⊃⊃(//)⎕VFI ⍵/⍨2>+\⍵='.'}2⊃'.'⎕WG'aplversion'
-      'Right argument must be length 1'⎕SIGNAL 11/⍨1≠≢min
+      'Right argument must be length 1'⎕SIGNAL _errno/⍨1≠≢min
       r←⊃min≤currentVersion
     ∇
 
-    Assert←{⍺←'' ⋄ (,1)≡,⍵:r←1 ⋄ ⍺ ⎕SIGNAL 1↓(⊃∊⍵),11}
+    Assert←{⍺←'' ⋄ (,1)≡,⍵:r←1 ⋄ ⍺ ⎕SIGNAL 1↓(⊃∊⍵),_errno}
 
     ∇ r←r AddTitles titles
     ⍝ `r` is a matrix with data. `titles` is put on top of that matrix, followed by a row with `-` matching the lengths of each title
@@ -401,14 +451,16 @@
       path,←(~(¯1↑path)∊'/\')/'/'
     ∇
 
-    ∇ G←LoadGitCode dummy;res;folder;msg
+    ∇ G←LoadGitCode dummy;res;folder;msg;⎕TRAP
       :If 0=⎕SE.⎕NC'_Git'
           G←'_Git'⎕SE.⎕NS''
-          folder←¯1↓1⊃⎕NPARTS ##.SourceFile,'APLSource'
+          folder←¯1↓1⊃⎕NPARTS ##.SourceFile ⍝ ,'APLSource'
           res←({⍵.overwrite←1 ⋄ ⍵}⎕NS'')⎕SE.Link.Import G folder
           'Could not import the Git application code'Assert∨/'Imported:'⍷res
+          ⎕TRAP←0 'S'
+          ⎕SE.Tatin.LoadDependencies((1⊃⎕NPARTS ##.SourceFile),'packages')'⎕se._Git.APLSource'
           ⎕SE.Git←⎕SE._Git.APLSource.API          ⍝ Establish the API
-          {}⎕SE.Git.InitializeGit''
+          {}⎕SE.Git.InitializeGitUserCommand''
       :EndIf
       G←⎕SE.Git
     ∇
@@ -423,9 +475,9 @@
       default←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'default'
       isOkay←0
       :If 0≠≢default
-          'Left argument must be a scalar'⎕SIGNAL 11/⍨1≠≢default
+          'Left argument must be a scalar'⎕SIGNAL _errno/⍨1≠≢default
       :AndIf ~default∊0 1
-          'The left argument. if specified, must be a Boolean or empty'⎕SIGNAL 11
+          'The left argument. if specified, must be a Boolean or empty'⎕SIGNAL _errno
       :EndIf
       :If 0=≢default
           add←' (y/n) '
@@ -479,8 +531,8 @@
       (caption manyFlag mustFlag)←x,(⍴,x)↓'' 0 0
       ⎕IO←1 ⋄ ⎕ML←1
       manyFlag←{0<⎕NC ⍵:⍎⍵ ⋄ 0}'manyFlag'
-      'Invalid right argument; must be a vector of text vectors.'⎕SIGNAL 11/⍨2≠≡options
-      'Right argument has more than 999 items'⎕SIGNAL 11/⍨999<≢options
+      'Invalid right argument; must be a vector of text vectors.'⎕SIGNAL _errno/⍨2≠≡options
+      'Right argument has more than 999 items'⎕SIGNAL _errno/⍨999<≢options
       flag←0
       :Repeat
           ⎕←{⍵↑'--- ',caption,((0≠≢caption)/' '),⍵⍴'-'}⎕PW-1
@@ -517,8 +569,9 @@
     ∇
 
     ∇ (space folder)←GetSpaceAndFolder data
-      :If 'file://'{⍺≡(≢⍺)↑⍵}data
-          folder←(≢'file://')↓data
+      :If ∨/'/\:'∊data
+      :OrIf ~(⊃data)∊'#⎕'
+          folder←data
           space←G.GetProjectFromPath folder
       :Else
           space←data
