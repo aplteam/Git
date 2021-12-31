@@ -22,8 +22,27 @@ All functions are also available via an API which lives in `⎕SE.Git`. However,
 
 Also, it opens an edit window for the user to create a message in case the `-m=` option wa not set.
 
+## Methods
+
+```
+ Add                Execute the git "Add" commands                                         
+ ChangeLog          Takes an APL name and list all commits the object was part of          
+ Commit             Performs a commit on the current branch                                
+ CurrentBranch      Returns the name of the current branch                                                                      
+ GetDefaultProject  Returns namespace and folder of the current default project, if any    
+ GoToGitHub         For a project "Foo/Goo" this opens https://github.com/Foo/Goo
+ IsDirty            Reports whether there are uncommited changes and/or untracked files
+ IsGitProject       Returns "yes" or "no" depending on whether there is a ./.git folder    
+ ListBranches       Lists all branches for a Git-managed project                            
+ OpenGitShell       Opens a Git shell for a Git managed project                             
+ SetDefaultProject  Specifies the project to be used in case no project is specified   
+ Status             Reports all untracked files and/or all uncommited changes
+ Version            Returns name, version number and version date as a three-element vector
+```
+
 ## Preconditions and assumptions
 
 * The Git bash must be installed, and available on the Windows environment variable `%PATH%`.
 * `Git` assumes that any project is managed by the project manager 
   [Cider](https://github.com/aplteam/Cider).
+* `]Git.GoToGitHub` requires you to host your project on GitHub, but all other commands are agnostic in this respect.

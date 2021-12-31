@@ -1,4 +1,4 @@
-:Class Git_uc
+﻿:Class Git_uc
 ⍝ User Command class for the project manager "Git"
 ⍝ Kai Jaeger ⋄ APL Team Ltd
 ⍝ Version 0.1.0
@@ -14,7 +14,7 @@
      
           c←⎕NS''
           c.Name←'Add'
-          c.Desc←'Execute the git "Add" commands'
+          c.Desc←'Executes the git "Add" commands'
           c.Group←'Git'
           c.Parse←'1 -project='
           c._Project←0
@@ -38,7 +38,7 @@
      
           c←⎕NS''
           c.Name←'CurrentBranch'
-          c.Desc←''
+          c.Desc←'Returns the name of the current branch'
           c.Group←'Git'
           c.Parse←'1s'
           c._Project←1
@@ -54,7 +54,7 @@
      
           c←⎕NS''
           c.Name←'GoToGitHub'
-          c.Desc←'Opens project page on GitHub'
+          c.Desc←'For a project "Foo/Goo" this opens https://github.com/Foo/Goo'
           c.Group←'Git'
           c.Parse←'1s'
           c._Project←1
@@ -62,7 +62,7 @@
      
           c←⎕NS''
           c.Name←'IsDirty'
-          c.Desc←'Reports uncommited changes'
+          c.Desc←'Reports whether there are uncommited changes and/or untracked files'
           c.Group←'Git'
           c.Parse←'1s'
           c._Project←1
@@ -78,7 +78,7 @@
      
           c←⎕NS''
           c.Name←'ListBranches'
-          c.Desc←'List all branches for a Git-managed project'
+          c.Desc←'Lists all branches for a Git-managed project'
           c.Group←'Git'
           c.Parse←'1s'
           c._Project←1
@@ -86,7 +86,7 @@
      
           c←⎕NS''
           c.Name←'OpenGitShell'
-          c.Desc←'Open a Git Shell for a Git managed project'
+          c.Desc←'Opens a Git shell for a Git managed project'
           c.Group←'Git'
           c.Parse←'1s'
           c._Project←1
@@ -94,7 +94,7 @@
      
           c←⎕NS''
           c.Name←'SetDefaultProject'
-          c.Desc←'Specify the project all commands use in case no project is specified'
+          c.Desc←'Specifies the project to be used in case no project is specified'
           c.Group←'Git'
           c.Parse←'1s'
           c._Project←1
@@ -102,7 +102,7 @@
      
           c←⎕NS''
           c.Name←'Status'
-          c.Desc←'Returns the current status'
+          c.Desc←'Reports all untracked files and/or all uncommited changes'
           c.Group←'Git'
           c.Parse←'1s -short'
           c._Project←1
@@ -120,17 +120,58 @@
 
     ∇ r←Run(Cmd Args);folder;G;space
       :Access Shared Public
-      r←0 0⍴''
       ('Git needs at least version ',MinimumVersionOfDyalog,' of Dyalog APL')Assert AtLeastVersion⊃(//)⎕VFI MinimumVersionOfDyalog
       G←LoadGitCode ⍬
+      (r space folder)←GetSpaceAndFolder Cmd Args
+      :If 0=≢r
+          :Select ⎕C Cmd
+          :Case ⎕C'Add'
+              r←Add space folder Args
+          :Case ⎕C'ChangeLog'
+              r←ChangeLog space folder Args
+          :Case ⎕C'Commit'
+              r←Commit space folder Args
+          :Case ⎕C'CurrentBranch'
+              r←CurrentBranch space folder Args
+          :Case ⎕C'GetDefaultProject'
+              r←GetDefaultProject ⍬
+          :Case ⎕C'GoToGitHub'
+              :If 0=⎕NC'space'
+              :OrIf 0=≢space
+                  r←GoToGitHub Args
+              :Else
+                  r←space GoToGitHub Args
+              :EndIf
+          :Case ⎕C'IsDirty'
+              r←IsDirty space folder Args
+          :Case ⎕C'IsGitProject'
+              r←IsGitProject space folder Args
+          :Case ⎕C'ListBranches'
+              r←ListBranches space folder Args
+          :Case ⎕C'OpenGitShell'
+              r←OpenGitShell space folder Args
+          :Case ⎕C'SetDefaultProject'
+              r←G.SetDefaultProject{⍵/⍨0≠⍵}Args._1
+          :Case ⎕C'Status'
+              r←⍪Status space folder Args
+          :Case ⎕C'Version'
+              r←⊃{⍺,' from ',⍵}/1↓⎕SE._Git.APLSource.Version
+          :Else
+              ∘∘∘ ⍝ Huh?!
+          :EndSelect
+      :EndIf
+    ∇
+
+    ∇ (r space folder)←GetSpaceAndFolder(Cmd Args)
+      r←0 0⍴'' ⋄ space←folder←''
       :If ~(⊂Cmd)∊'GetDefaultProject' 'SetDefaultProject' 'Version'
           :If ({⍵⊃⍨⍸⍵.Name≡¨⊂Cmd}List)._Project
           :AndIf 0≢Args._1
-              (space folder)←GetSpaceAndFolder Args._1
+              (space folder)←GetSpaceAndFolder_ Args._1
           :ElseIf 2=Args.⎕NC'project'
           :AndIf (,0)≢,Args.project
           :AndIf 0<≢Args.project
-              (space folder)←GetSpaceAndFolder Args.project
+              (space folder)←GetSpaceAndFolder_ Args.project
           :Else
               (space folder)←G.EstablishProject''
           :EndIf
@@ -139,49 +180,12 @@
               :AndIf ⎕NEXISTS'./.git'
                   folder←'./'
               :Else
-                  r←'No project proveded/selected'
-                  :Return
+                  r←'No project provided/selected'
               :EndIf
-          :EndIf
-          :If ~(⊂Cmd)∊'GoToGitHub' ''
+          :ElseIf ~(⊂Cmd)∊'GoToGitHub' ''
               ('<',folder,'> not found on disk')Assert ⎕NEXISTS folder
           :EndIf
       :EndIf
-      :Select ⎕C Cmd
-      :Case ⎕C'Add'
-          r←Add space folder Args
-      :Case ⎕C'ChangeLog'
-          r←ChangeLog space folder Args
-      :Case ⎕C'Commit'
-          r←Commit space folder Args
-      :Case ⎕C'CurrentBranch'
-          r←CurrentBranch space folder Args
-      :Case ⎕C'GetDefaultProject'
-          r←GetDefaultProject ⍬
-      :Case ⎕C'GoToGitHub'
-          :If 0=⎕NC'space'
-          :OrIf 0=≢space
-              r←GoToGitHub Args
-          :Else
-              r←space GoToGitHub Args
-          :EndIf
-      :Case ⎕C'IsDirty'
-          r←IsDirty space folder Args
-      :Case ⎕C'IsGitProject'
-          r←IsGitProject space folder Args
-      :Case ⎕C'ListBranches'
-          r←ListBranches space folder Args
-      :Case ⎕C'OpenGitShell'
-          r←OpenGitShell space folder Args
-      :Case ⎕C'SetDefaultProject'
-          r←G.SetDefaultProject{⍵/⍨0≠⍵}Args._1
-      :Case ⎕C'Status'
-          r←⍪Status space folder Args
-      :Case ⎕C'Version'
-          r←⊃{⍺,' from ',⍵}/1↓⎕SE._Git.APLSource.Version
-      :Else
-          ∘∘∘ ⍝ Huh?!
-      :EndSelect
     ∇
 
     ∇ r←GetDefaultProject dummy
@@ -274,8 +278,11 @@
                       r←'Commit cancelled by user'
                       :Return
                   :EndIf
+              :Else
+                  flag←1
               :EndIf
               msg←{0=≢⍵:'...' ⋄ ⍵}msg
+              msg←1↓∊(⎕UCS 10),¨msg
           :Until flag
       :EndIf
       r←msg ⎕SE.Git.Commit folder
@@ -290,14 +297,14 @@
       r←⍪G.ListBranches folder
     ∇
 
-    ∇ r←level Help Cmd;ref
+    ∇ r←level Help Cmd;ref;⎕TRAP
       :Access Shared Public
       r←''
       :Select level
       :Case 0
           :Select ⎕C Cmd
           :Case ⎕C'Add'
-              r,←⊂']Git.add <filter>'
+              r,←⊂']Git.add <filter> -project='
           :Case ⎕C'ChangeLog'
               r,←⊂']Git.ChangeLog <APL-object> -project'
           :Case ⎕C'Commit'
@@ -329,6 +336,9 @@
      
       :Case 1
           :Select ⎕C Cmd
+          :Case ⎕C'Add'
+              ⎕TRAP←0 'S'
+              ∘∘∘
           :Case ⎕C'Commit'
               r,←⊂'Record changes to the repository.'
               r,←⊂'The branch must not be dirty (see ]Git.IsDirty) but if it is anyway the user will be'
@@ -568,7 +578,7 @@
       index←{1<≢⍵:⍵ ⋄ ⊃⍵}⍣(⍬≢index)⊣index
     ∇
 
-    ∇ (space folder)←GetSpaceAndFolder data
+    ∇ (space folder)←GetSpaceAndFolder_ data
       :If ∨/'/\:'∊data
       :OrIf ~(⊃data)∊'#⎕'
           folder←data
