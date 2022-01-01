@@ -1,6 +1,8 @@
- r←{folder}RunGitCommand command;cmd;buff
- folder←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'folder'
- cmd←'-C "',folder,'" ',command
+ (rc msg result)←RunGitCommand(path command);cmd;buff
+ cmd←'-C "',path,'" ',command
  buff←RunProcess'git'cmd
- r←buff.(ExitCode StdErr StdOut)
+ (rc msg result)←buff.(ExitCode StdErr StdOut)
+ :If 0=≢msg
+     msg←command,' => ',path
+ :EndIf
 ⍝Done

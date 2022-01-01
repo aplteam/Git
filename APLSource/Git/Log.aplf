@@ -1,28 +1,40 @@
- r←{noOf}Log y;buff;cmd;msg;rc;⎕TRAP;path
-⍝ Returns a matrix with four columns and zero to many rows:\\
-⍝ 1. Hash of the commit
-⍝ 2. User ID
-⍝ 3. Timestamp
-⍝ 4. Message\\
-⍝ With the optional `noOf` you can limit the result to the last (youngest) `noOf` commits.\\
+ r←{parms_}Log y;buff;cmd;msg;rc;⎕TRAP;path;parms
+⍝ Returns the log of commits.\\
+⍝ The result depends on `verbose`; if it is 0 (the default):
+⍝  * r is a matrix with four columns and zero to many rows:\\
+⍝    1. Hash of the commit
+⍝    2. Author
+⍝    3. Timestamp
+⍝    4. Message; multi-line messages are compressed
+⍝  * r is a one-column matrix
+⍝ With the optional `since` you can limit the result by date: YYY-MM-DD.\\
 ⍝ `y` must be one of:
 ⍝   * Fully qualfied name of a namespace  that is an opened Cider project
 ⍝   * Fully qualified path to a Git-managed project
  ⎕TRAP←(811 'E' '⎕DMX.EM ⎕signal 811')(0 'N')
- noOf←{0<⎕NC ⍵:⍎⍵ ⋄ 0}'noOf'
+ r←''
  path←U.GetProjectPath y
- 'Invalid right argument'⎕SIGNAL 11/⍨1≠≡,noOf
- 'Invalid right argument'⎕SIGNAL 11/⍨~(⎕DR noOf)∊83 163 323
- :If 0=noOf
-     cmd←'log --pretty=format:"',U.GetLogFormat,'"'
- :Else
-     cmd←'log -',(⍕|noOf),' --pretty=format:"',U.GetLogFormat,'"'
+ parms←⎕NS''
+ parms.since←''
+ parms.verbose←0
+ :If 9=⎕NC'parms_'
+     'parms'⎕NS parms_
  :EndIf
- (rc msg buff)←path U.RunGitCommand cmd
+ :If ~∧/(parms.⎕NL-2)∊'since' 'verbose'
+     811 ⎕SIGNAL⍨'Invalid parameters: ',⊃{⍺,',',⍵}/(parms.⎕NL-2)~'since' 'verbose'
+ :EndIf
+ cmd←'log '
+ cmd,←(0<≢parms.since)/'--since=',parms.since,' '
+ cmd,←(0=parms.verbose)/' --pretty=format:"',U.GetLogFormat,'"'
+ (rc msg buff)←U.RunGitCommand path cmd
  msg U.Assert 0=rc
- :If 0=≢buff
-     r←0 4⍴''
+ :If parms.verbose
+     r←⍪buff
  :Else
-     r←↑U.FormatLog buff
+     :If 0=≢buff
+         r←0 4⍴''
+     :Else
+         r←↑U.FormatLog buff
+     :EndIf
  :EndIf
 ⍝Done

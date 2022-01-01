@@ -34,6 +34,7 @@ Also, it opens an edit window for the user to create a message in case the `-m=`
  IsDirty            Reports whether there are uncommited changes and/or untracked files
  IsGitProject       Returns "yes" or "no" depending on whether there is a ./.git folder    
  ListBranches       Lists all branches for a Git-managed project                            
+ Log                Returns the log of commits.\\
  OpenGitShell       Opens a Git shell for a Git managed project                             
  SetDefaultProject  Specifies the project to be used in case no project is specified   
  Status             Reports all untracked files and/or all uncommited changes

@@ -85,6 +85,14 @@
           r,←c
      
           c←⎕NS''
+          c.Name←'Log'
+          c.Desc←'Shows the commit logs'
+          c.Group←'Git'
+          c.Parse←'1s -since= -verbose'
+          c._Project←1
+          r,←c
+     
+          c←⎕NS''
           c.Name←'OpenGitShell'
           c.Desc←'Opens a Git shell for a Git managed project'
           c.Group←'Git'
@@ -148,6 +156,8 @@
               r←IsGitProject space folder Args
           :Case ⎕C'ListBranches'
               r←ListBranches space folder Args
+          :Case ⎕C'Log'
+              r←Log space folder Args
           :Case ⎕C'OpenGitShell'
               r←OpenGitShell space folder Args
           :Case ⎕C'SetDefaultProject'
@@ -160,6 +170,13 @@
               ∘∘∘ ⍝ Huh?!
           :EndSelect
       :EndIf
+    ∇
+
+    ∇ r←Log(space folder args);parms
+      parms←⎕NS''
+      parms.verbose←args.verbose
+      parms.since←{0≡⍵:'' ⋄ ⍵}args.since
+      r←parms G.Log folder
     ∇
 
     ∇ (r space folder)←GetSpaceAndFolder(Cmd Args)
@@ -249,10 +266,10 @@
 
     ∇ r←Commit(space folder args);msg;ref;branch;rc;data;flag
       branch←⎕SE.Git.CurrentBranch folder
-      :If (⎕SE.Git.IsDirty space)∊2 3
+      :If ∨/2 3∊⍸IntToBits ⎕SE.Git.IsDirty space
           :If 1=args.add
-          :OrIf 1 YesOrNo'Branch "',branch,'" is dirty - excute Git''s "Add ." command?'
-              (rc msg data)←folder ⎕SE.Git.##.U.RunGitCommand'add .'
+          :OrIf 1 YesOrNo'Branch "',branch,'" is dirty - shall Git''s "Add ." command be executed?'
+              (rc msg data)←⎕SE.Git.##.U.RunGitCommand folder'add .'
               msg Assert 0=rc
           :Else
               r←'Cancelled by user'
@@ -308,20 +325,22 @@
           :Case ⎕C'ChangeLog'
               r,←⊂']Git.ChangeLog <APL-object> -project'
           :Case ⎕C'Commit'
-              r,←⊂']Git.Commit [project] -m= -add'
+              r,←⊂']Git.Commit [spcace|folder] -m= -add'
           :Case ⎕C'CurrentBranch'
-              r,←⊂']Git.CurrenBranch [project]'
+              r,←⊂']Git.CurrenBranch [space|folder]'
           :Case ⎕C'GetDefaultProject'
               r,←⊂']GetDefaultProject'
           :Case ⎕C'GoToGitHub'
-              r,←⊂']Git.OpenGitHub [space|project|<group>/<project-name>|[alias]]'
+              r,←⊂']Git.OpenGitHub [space|folder|<group>/<project-name>|[alias]]'
           :Case ⎕C'IsDirty'
-              r,←⊂']Git.IsDirty [project]'
+              r,←⊂']Git.IsDirty [space|folder]'
           :Case ⎕C'IsGitProject'
-              r,←⊂']Git.IsGitProject [project]'
+              r,←⊂']Git.IsGitProject [space|folder]'
           :Case ⎕C'ListBranches'
-              r,←⊂']Git.ListBranches [project]'
-          :Case ⎕C'OpenGitShell [project]'
+              r,←⊂']Git.ListBranches [space|folder]'
+          :Case ⎕C'Log'
+              r,←⊂']Git.Log [space|folder] -since= -verbose'
+          :Case ⎕C'OpenGitShell [space|folder]'
               r,←⊂']Git.OpenGitShell'
           :Case ⎕C'SetDefaultProject'
               r,←⊂']Git.SetDefaultProject [space|folder]'
@@ -391,12 +410,11 @@
               r,←⊂''
               r,←AddProjectOptions ⍬
           :Case ⎕C'Log'
+              r,←⊂'Shows a list with all commits in an edit window, by default with --oneline, but watch out'
+              r,←⊂'for -verbose.'
               r,←⊂''
-              r,←AddProjectOptions ⍬
-          :Case ⎕C'LogForBranch'
-              r,←⊂''
-              r,←AddProjectOptions ⍬
-          :Case ⎕C'RefLog'
+              r,←⊂'-since=  Use this to get all commits after a specific date (YYYY-MM-DD)'
+              r,←⊂'-verbose By default a short report is provided. Overwrite with -verbose for a detailed report'
               r,←⊂''
               r,←AddProjectOptions ⍬
           :Case ⎕C'OpenGitShell'
@@ -587,6 +605,14 @@
           space←data
           folder←G.GetPathFromProject space
       :EndIf
+    ∇
+
+    ∇ int←IntToBits bits
+      int←⌽(32⍴2)⊤bits
+    ∇
+
+    ∇ bits←BitsToInt int
+      bits←(32⍴2)⊥⌽32↑int
     ∇
 
 :EndClass

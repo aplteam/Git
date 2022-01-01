@@ -5,10 +5,10 @@
 ⍝   * Fully qualfied name of a namespace that is an opened Cider project
 ⍝   * Fully qualified path to a Git-managed project
 ⍝ Returns a 0
- filter←{0<⎕NC ⍵:⍎⍵ ⋄ '.'}'filter'
+ filter←{0<⎕NC ⍵:⍎⍵ ⋄ '.'}' filter'
  r←0
  path←U.GetProjectPath y
  'No filter specified?!'⎕SIGNAL 11/⍨0=≢filter
- (rc msg buff)←path U.RunGitCommand'add ',filter
+ (rc msg buff)←U.RunGitCommand path('add ',filter)
  msg U.Assert 0=rc
 ⍝Done

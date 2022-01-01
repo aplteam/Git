@@ -4,7 +4,7 @@
  TAB←'%x09'                 ⍝ This does not work: arrives as space in APL!
  SEP←'\'                    ⍝ Therefore we settle for a backslash as seperator.
  format←''
- format,←'%h'               ⍝ Commit hash
+ format,←'%h'               ⍝ Commit hash (short; %H would be long)
  format,←SEP
  format,←'%an'              ⍝ Author name
  format,←SEP

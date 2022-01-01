@@ -17,7 +17,7 @@
  ('You must provide a meaningful message in the "',cb,'" branch')⎕SIGNAL 11/⍨(0=nm)∧0=≢msg
  msg_←U.MassageMsg msg
  cmd←'commit -m "',msg_,'"'
- (rc msg buff)←path U.RunGitCommand cmd
+ (rc msg buff)← U.RunGitCommand path cmd
  :If ∨/'nothing to commit, working tree clean'⍷∊buff
      r←buff
  :Else

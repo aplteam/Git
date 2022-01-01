@@ -13,6 +13,7 @@
  r,←⊂'IsDirty'
  r,←⊂'IsGitProject'
  r,←⊂'ListBranches'
+ r,←⊂'Log'
  r,←⊂'Methods'
  r,←⊂'OpenGitShell'
  r,←⊂'SetDefaultProject'

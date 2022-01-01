@@ -5,7 +5,7 @@
 ⍝   * Fully qualified path to a Git-managed project
  ⎕TRAP←(811 'E' '⎕DMX.EM ⎕signal 811')(0 'N')
  path←U.GetProjectPath y
- (rc more buff)←path U.RunGitCommand'branch --list -a'
+ (rc more buff)← U.RunGitCommand path 'branch --list -a'
  U.Assert 0=rc
  r←{⍵/⍨0<≢¨⍵}⍣(0≠≢buff)⊣buff
 ⍝Done

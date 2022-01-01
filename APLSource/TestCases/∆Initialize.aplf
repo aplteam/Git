@@ -1,16 +1,16 @@
- {r}←∆Initialize folder;rc;more;buff;msg2;more2
-⍝ Makes `folder` a Git Repository and commits what's there as "Initial commit".\\
+ {r}←∆Initialize path;rc;more;buff;msg2;more2
+⍝ Makes `path` a Git Repository and commits what's there as "Initial commit".\\
 ⍝ Always returns ⍬.
- (rc more buff)←folder G.U.RunGitCommand'init --initial-branch=main'
+ (rc more buff)←G.U.RunGitCommand path 'init --initial-branch=main'
  G.U.Assert 0=rc
- (⊂G.U.GetGitAttributes)⎕NPUT folder,'/.gitattributes'
- (rc more buff)←folder G.U.RunGitCommand'add .'
+ (⊂G.U.GetGitAttributes)⎕NPUT path,'/.gitattributes'
+ (rc more buff)← G.U.RunGitCommand path 'add .'
  :If 0≠rc
      more2←(⎕UCS 13)(≠⊆⊢)more
  :AndIf ~∧/⊃∨/'warning: LF will be replaced by CRLF' 'The file will have its original line endings'{⍺∘≡¨(≢⍺)↑¨⍵}¨⊂more2
      more G.U.Assert 0
  :EndIf
- (rc more buff)←folder G.U.RunGitCommand'commit -m "Initial commit"'
+ (rc more buff)←G.U.RunGitCommand path 'commit -m "Initial commit"'
  G.U.Assert 0=rc
  r←⍬
 ⍝Done

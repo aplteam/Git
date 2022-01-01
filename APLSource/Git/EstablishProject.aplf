@@ -37,7 +37,7 @@
              namespace←⊃list[bool⍳1;]
          :EndIf
      :Else
-         'Is not namespace'U.Assert(⊃y)∊'#⎕'
+         'Is not a namespace'U.Assert(⊃y)∊'#⎕'
          'There are no open Cider projects'U.Assert 0<≢list
          bool←list[;1]≡¨⊂y
          'Is not an opened Cider project'U.Assert 1=+/bool

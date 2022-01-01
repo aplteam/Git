@@ -52,7 +52,7 @@
          cmd←'log -',(⍕|noOf),' main..',branchName,' --pretty=format:"',U.GetLogFormat,'"'
      :EndIf
  :EndIf
- (rc more r)←path U.RunGitCommand cmd
+ (rc more r)← U.RunGitCommand path cmd
  more U.Assert 0=rc
  :If 0<≢r
      r←↑U.FormatLog r
