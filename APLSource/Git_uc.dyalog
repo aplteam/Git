@@ -240,16 +240,19 @@
       r←⎕SE.Git.GoToGithub folder msg
     ∇
 
-    ∇ r←IsDirty(space folder args);int
-      int←⎕SE.Git.IsDirty folder
-      :Select ⊃int
-      :Case 1
-          r←'Project ',space,' (',folder,') has uncommitted changes but no untracked files'
-      :Case 2
-          r←'Project ',space,' (',folder,') has untracked files but no uncommited changes'
-      :Case 3
-          r←'Project ',space,' (',folder,') has both uncommitted changes and untracked files'
-      :EndSelect
+    ∇ r←IsDirty(space folder args);int;sep
+      int←⍸IntToBits ⎕SE.Git.IsDirty folder
+      sep←⎕UCS 10
+      r←'Project ',space,':',sep
+      :If 1∊int
+          r,←'has uncommitted files',sep
+      :EndIf
+      :If 2∊int
+          r,←'has unstaged files',sep
+      :EndIf
+      :If 4∊int
+          r,←'has untracked files'
+      :EndIf
     ∇
 
     ∇ r←IsGitProject(space folder args)
@@ -264,9 +267,10 @@
       r←⎕SE.Git.CurrentBranch folder
     ∇
 
-    ∇ r←Commit(space folder args);msg;ref;branch;rc;data;flag
+    ∇ r←Commit(space folder args);msg;ref;branch;rc;data;flag;ints
       branch←⎕SE.Git.CurrentBranch folder
-      :If ∨/2 3∊⍸IntToBits ⎕SE.Git.IsDirty space
+      ints←⍸IntToBits ⎕SE.Git.IsDirty space
+      :If ∨/2 3∊ints
           :If 1=args.add
           :OrIf 1 YesOrNo'Branch "',branch,'" is dirty - shall Git''s "Add ." command be executed?'
               (rc msg data)←⎕SE.Git.##.U.RunGitCommand folder'add .'
@@ -275,6 +279,9 @@
               r←'Cancelled by user'
               :Return
           :EndIf
+      :ElseIf 0=≢ints
+          r←'Nothing to commit, is clean'
+          :Return
       :EndIf
       :If (,0)≢,Args.m
       :AndIf 0<≢Args.m
@@ -302,7 +309,7 @@
               msg←1↓∊(⎕UCS 10),¨msg
           :Until flag
       :EndIf
-      r←msg ⎕SE.Git.Commit folder
+      r←⍪msg ⎕SE.Git.Commit folder
     ∇
 
     ∇ r←Status(space folder args);short
