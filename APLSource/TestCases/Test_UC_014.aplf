@@ -1,4 +1,4 @@
- R←Test_UC_014(stopFlag batchFlag);⎕TRAP;rc;msg;stop;result;result2
+ R←Test_UC_014(stopFlag batchFlag);⎕TRAP;rc;msg;stop;result;result2;result3
 ⍝ Runs ]Log
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
@@ -13,8 +13,8 @@
  (rc msg result2)←stop ∆UCMD'Log "',∆Folder2,'" -since=2020-01-01'
  →T.PassesIf result≢result2
 
-(rc msg result2)←stop ∆UCMD'Log "',∆Folder2,'" -verbose'
-∘∘∘
+(rc msg result3)←stop ∆UCMD'Log "',∆Folder2,'" -verbose'
+ →T.PassesIf 4=≢result3
 
  R←T._OK
 ⍝Done

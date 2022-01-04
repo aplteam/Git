@@ -28,7 +28,7 @@ Also, it opens an edit window for the user to create a message in case the `-m=`
  Add                Execute the git "Add" commands                                         
  ChangeLog          Takes an APL name and list all commits the object was part of          
  Commit             Performs a commit on the current branch                                
- CurrentBranch      Returns the name of the current branch                                                                      
+ CurrentBranch      Returns the name of the current branch            
  GetDefaultProject  Returns namespace and folder of the current default project, if any    
  GoToGitHub         For a project "Foo/Goo" this opens https://github.com/Foo/Goo
  IsDirty            Reports whether there are uncommited changes and/or untracked files

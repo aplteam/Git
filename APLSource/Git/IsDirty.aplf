@@ -4,7 +4,7 @@
 ⍝ * 1 means there are just uncommitted files
 ⍝ * 2 means there are just unstaged files
 ⍝ * 4 means there are just untracked files
-⍝ * Higher numbers are the sum of the others
+⍝ * Other numbers are the sum of these
 ⍝ Use `Status` to find out details.\\
 ⍝ For what `y` can actually be see `EstablishProject`.\\
  project←EstablishProject y

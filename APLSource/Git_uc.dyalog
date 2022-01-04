@@ -242,16 +242,20 @@
 
     ∇ r←IsDirty(space folder args);int;sep
       int←⍸IntToBits ⎕SE.Git.IsDirty folder
-      sep←⎕UCS 10
-      r←'Project ',space,':',sep
-      :If 1∊int
-          r,←'has uncommitted files',sep
-      :EndIf
-      :If 2∊int
-          r,←'has unstaged files',sep
-      :EndIf
-      :If 4∊int
-          r,←'has untracked files'
+      :If 0=≢int
+          r←'Project ',space,' is clean'
+      :Else
+          sep←⎕UCS 10
+          r←'Project ',space,':',sep
+          :If 1∊int
+              r,←'has uncommitted files',sep
+          :EndIf
+          :If 2∊int
+              r,←'has unstaged files',sep
+          :EndIf
+          :If 4∊int
+              r,←'has untracked files'
+          :EndIf
       :EndIf
     ∇
 

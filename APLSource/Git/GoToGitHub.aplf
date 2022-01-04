@@ -1,5 +1,5 @@
  {r}←GoToGitHub y;url;ref;list;ind
-⍝ Opens the homepage of the current project on GitHub.\\
+⍝ Opens the homepage of the given project on GitHub.\\
 ⍝ `y` can be either the name of a project (like "Fire") or anything that `EstablishProject`
 ⍝ can make sense of; see `EstablishProject` for details. In the former case the current
 ⍝ directory must be compatible with the name given.\\

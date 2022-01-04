@@ -1,6 +1,5 @@
  index←{caption}Select options;flag;answer;question;value;bool
 ⍝ Presents `options` as a numbered list and allows the user to select exactly one of them.\\
-⍝ See also `SelectTwo`.\\
 ⍝ `options` must not have more than 999 items.
 ⍝ If the user aborts `index1 is `⍬`.
  caption←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'caption'

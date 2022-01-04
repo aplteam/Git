@@ -1,1 +1,0 @@
- WinLowercase←{'Win'≢A.GetOperatingSystem ⍬:⍵ ⋄ ⎕C ⍵}

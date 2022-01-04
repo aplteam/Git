@@ -1,4 +1,0 @@
- RemoveCallsFromAPI←{
-     nsi←⍵
-     nsi↓⍨+/∧\{'API'≡'.'A.Last ⍵}¨nsi
- }
