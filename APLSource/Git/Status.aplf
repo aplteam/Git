@@ -1,6 +1,6 @@
  r←{short}Status y;rc;more;path;⎕TRAP;short
 ⍝ Reports all uncommited/untracked files.\\
-⍝ `path` must be one of:
+⍝ `y` must be one of:
 ⍝   * Fully qualfied name of a namespace  that is an opened Cider project
 ⍝   * Fully qualified path to a Git-managed project
 ⍝ `short` defaults to 0 which gives you a detailed report.

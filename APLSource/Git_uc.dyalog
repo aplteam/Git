@@ -1,7 +1,7 @@
 ﻿:Class Git_uc
 ⍝ User Command class for the project manager "Git"
 ⍝ Kai Jaeger ⋄ APL Team Ltd
-⍝ Version 0.1.0
+⍝ Version 0.2.0
 
     ⎕IO←1 ⋄ ⎕ML←1 ⋄ ⎕WX←3
     MinimumVersionOfDyalog←'18.0'
@@ -41,6 +41,14 @@
           c.Desc←'Returns the name of the current branch'
           c.Group←'Git'
           c.Parse←'1s'
+          c._Project←1
+          r,←c
+     
+          c←⎕NS''
+          c.Name←'Diff'
+          c.Desc←'Compares the working directory with HEAD'
+          c.Group←'Git'
+          c.Parse←'1s -verbose'
           c._Project←1
           r,←c
      
@@ -141,6 +149,8 @@
               r←Commit space folder Args
           :Case ⎕C'CurrentBranch'
               r←CurrentBranch space folder Args
+          :Case ⎕C'Diff'
+              r←Diff space folder Args
           :Case ⎕C'GetDefaultProject'
               r←GetDefaultProject ⍬
           :Case ⎕C'GoToGitHub'
@@ -209,11 +219,15 @@
       r←G.GetDefaultProject dummy
     ∇
 
+    ∇ r←Diff(space folder args);filter
+      r←⍪args.verbose G.Diff folder
+    ∇
+
     ∇ r←Add(space folder args);filter
       'Not a URL on GitHub'Assert 0<≢args._1
       filter←args._1
       'Invalid filter'Assert 0<≢filter
-      {}filter G.Add space
+      {}filter G.Add folder
       r←0 0⍴''
     ∇
 
@@ -240,23 +254,9 @@
       r←⎕SE.Git.GoToGithub folder msg
     ∇
 
-    ∇ r←IsDirty(space folder args);int;sep
-      int←⍸IntToBits ⎕SE.Git.IsDirty folder
-      :If 0=≢int
-          r←'Project ',space,' is clean'
-      :Else
-          sep←⎕UCS 10
-          r←'Project ',space,':',sep
-          :If 1∊int
-              r,←'has uncommitted files',sep
-          :EndIf
-          :If 2∊int
-              r,←'has unstaged files',sep
-          :EndIf
-          :If 4∊int
-              r,←'has untracked files'
-          :EndIf
-      :EndIf
+    ∇ r←IsDirty(space folder args)
+      r←⎕SE.Git.IsDirty folder
+      r←(r+1)⊃'Clean' 'Dirty'
     ∇
 
     ∇ r←IsGitProject(space folder args)
@@ -271,10 +271,9 @@
       r←⎕SE.Git.CurrentBranch folder
     ∇
 
-    ∇ r←Commit(space folder args);msg;ref;branch;rc;data;flag;ints
+    ∇ r←Commit(space folder args);msg;ref;branch;rc;data;flag
       branch←⎕SE.Git.CurrentBranch folder
-      ints←⍸IntToBits ⎕SE.Git.IsDirty space
-      :If ∨/2 3∊ints
+      :If ⎕SE.Git.IsDirty folder ⍝ 0<'?'+.=⊃∘∪¨2↑¨1 ⎕SE.Git.Status folder
           :If 1=args.add
           :OrIf 1 YesOrNo'Branch "',branch,'" is dirty - shall Git''s "Add ." command be executed?'
               (rc msg data)←⎕SE.Git.##.U.RunGitCommand folder'add .'
@@ -283,37 +282,38 @@
               r←'Cancelled by user'
               :Return
           :EndIf
-      :ElseIf 0=≢ints
-          r←'Nothing to commit, is clean'
-          :Return
       :EndIf
-      :If (,0)≢,Args.m
-      :AndIf 0<≢Args.m
-          msg←Args.m
-          :If (⊂branch)∊'main' 'master'
-              ('You MUST specify a message for ',branch)Assert 0<≢msg~'.'
-          :EndIf
-      :Else
-          flag←0
-          :Repeat
-              ref←⎕NS''
-              ref.msg←'' ''
-              ref.⎕ED'msg'
-              msg←ref.msg{⍺/⍨~(⌽∧\0=⌽⍵)∨(∧\0=⍵)}≢¨ref.msg
+      :If ⎕SE.Git.IsDirty folder
+          :If (,0)≢,Args.m
+          :AndIf 0<≢Args.m
+              msg←Args.m
               :If (⊂branch)∊'main' 'master'
-              :AndIf 0=≢(∊msg)~'.'
-                  :If 0=1 YesOrNo'You MUST specify a meaningful message for "',branch,'"; try again (no=cancel) ?'
-                      r←'Commit cancelled by user'
-                      :Return
-                  :EndIf
-              :Else
-                  flag←1
+                  ('You MUST specify a message for ',branch)Assert 0<≢msg~'.'
               :EndIf
-              msg←{0=≢⍵:'...' ⋄ ⍵}msg
-              msg←1↓∊(⎕UCS 10),¨msg
-          :Until flag
+          :Else
+              flag←0
+              :Repeat
+                  ref←⎕NS''
+                  ref.msg←'' ''
+                  ref.⎕ED'msg'
+                  msg←ref.msg{⍺/⍨~(⌽∧\0=⌽⍵)∨(∧\0=⍵)}≢¨ref.msg
+                  :If (⊂branch)∊'main' 'master'
+                  :AndIf 0=≢(∊msg)~'.'
+                      :If 0=1 YesOrNo'You MUST specify a meaningful message for "',branch,'"; try again (no=cancel) ?'
+                          r←'Commit cancelled by user'
+                          :Return
+                      :EndIf
+                  :Else
+                      flag←1
+                  :EndIf
+                  msg←{0=≢⍵:'...' ⋄ ⍵}msg
+                  msg←1↓∊(⎕UCS 10),¨msg
+              :Until flag
+          :EndIf
+          r←⍪msg ⎕SE.Git.Commit folder
+      :Else
+          r←'Nothing to commit, is clean'
       :EndIf
-      r←⍪msg ⎕SE.Git.Commit folder
     ∇
 
     ∇ r←Status(space folder args);short
@@ -333,12 +333,12 @@
           :Select ⎕C Cmd
           :Case ⎕C'Add'
               r,←⊂']Git.add <filter> -project='
-          :Case ⎕C'ChangeLog'
-              r,←⊂']Git.ChangeLog <APL-object> -project'
           :Case ⎕C'Commit'
               r,←⊂']Git.Commit [spcace|folder] -m= -add'
           :Case ⎕C'CurrentBranch'
               r,←⊂']Git.CurrenBranch [space|folder]'
+          :Case ⎕C'Diff'
+              r,←⊂']Git.Diff [space|folder] -verbose'
           :Case ⎕C'GetDefaultProject'
               r,←⊂']GetDefaultProject'
           :Case ⎕C'GoToGitHub'
@@ -356,9 +356,9 @@
           :Case ⎕C'SetDefaultProject'
               r,←⊂']Git.SetDefaultProject [space|folder]'
           :Case ⎕C'Status'
-              r,←⊂']Git.Status -short -path= -ns='
+              r,←⊂']Git.Status -short -path='
           :Else
-              ∘∘∘ ⍝ Huuh?
+              r,←⊂'There is no help available'
           :EndSelect
           :If 'Version'≢Cmd
               r,←''(']Git.',Cmd,' -?? ⍝ Enter this for more information ')
@@ -368,7 +368,14 @@
           :Select ⎕C Cmd
           :Case ⎕C'Add'
               ⎕TRAP←0 'S'
-              ∘∘∘
+              r,←⊂'Add files to the index.'
+              r,←⊂''
+              r,←⊂'You may specify one of:'
+              r,←⊂' * A file'
+              r,←⊂' * A folder'
+              r,←⊂' * A "." (dot), meaning that all so far untracked files should be added'
+              r,←⊂''
+              r,←AddLevel3HelpInfo'Add'
           :Case ⎕C'Commit'
               r,←⊂'Record changes to the repository.'
               r,←⊂'The branch must not be dirty (see ]Git.IsDirty) but if it is anyway the user will be'
@@ -384,11 +391,17 @@
               r,←⊂'Note that a message is required for main (or the now deprecated master) branch but might'
               r,←⊂'be empty for other branches. Empty messages will become "...".'
               r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'Commit'
           :Case ⎕C'CurrentBranch'
               r,←⊂'Returns the name of the current branch'
               r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'CurrentBranch'
+          :Case ⎕C'Diff'
+              r,←⊂'Returns a list of files in the working directory that are different from HEAD.'
+              r,←⊂''
+              r,←⊂'-verbose:  Specify this to get a full report'
+              r,←⊂''
+              r,←AddLevel3HelpInfo'Diff'
           :Case ⎕C'GetDefaultProject'
               r,←⊂'Returns the namespace and the folder if there is a default project defined.'
               r,←⊂'See also ]Git.SetDefaultProject'
@@ -402,24 +415,22 @@
               r,←⊂' * A fully qualified namespace name of an opened Cider project like'
               r,←⊂'   #.Git'
               r,←⊂' * A Cider alias of an opened Cider project like [git]'
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'GoToGitHub'
           :Case ⎕C'IsDirty'
               r,←⊂'Returns one of:'
-              r,←⊂'Project <name> (<path) is [not] dirty'
-              r,←⊂'Project <name> (<path) has uncommitted changes but no untracked files'
-              r,←⊂'Project <name> (<path) has untracked files but no uncommited changes'
-              r,←⊂'Project <name> (<path) has both uncommitted changes and untracked files'
+              r,←⊂' * "Clean"'
+              r,←⊂' * "Dirty"'
               r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'IsDirty'
           :Case ⎕C'IsGitProject'
               r,←⊂'Returns:'
               r,←⊂'Project <name> (<path) is [not] managed by Git'
               r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'IsGitProject'
           :Case ⎕C'ListBranches'
               r,←⊂'List all branches'
               r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'ListBranches'
           :Case ⎕C'Log'
               r,←⊂'Shows a list with all commits in an edit window, by default with --oneline, but watch out'
               r,←⊂'for -verbose.'
@@ -427,12 +438,12 @@
               r,←⊂'-since=  Use this to get all commits after a specific date (YYYY-MM-DD)'
               r,←⊂'-verbose By default a short report is provided. Overwrite with -verbose for a detailed report'
               r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'Log'
           :Case ⎕C'OpenGitShell'
               r,←⊂'Opens a Git Bash shell, either on the given project or, if no project was provided, the'
               r,←⊂'current directory if that carries a folder .git/. If it does not an error is thrown'
               r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'OpenGitShell'
           :Case ⎕C'SetDefaultProject'
               r,←⊂'Use this to specify a default project.'
               r,←⊂'Commands that require a project will act on the default project in case it was set.'
@@ -441,29 +452,48 @@
               r,←⊂'Reports the status from Git''s perspective.'
               r,←⊂'By default a verbose report is printed.'
               r,←⊂'Specify -short for getting just the essentials.'
-              r,←⊂''
-              r,←AddProjectOptions ⍬
+              r,←AddLevel3HelpInfo'Status'
           :Else
-              ∘∘∘ ⍝ Huh?!
+              r,←⊂'There is no additional help available'
           :EndSelect
       :Case 2
-          r,←⊂'There is no additional help available'
+          :Select ⎕C Cmd
+          :CaseList ⎕C¨'Add' ''
+              r,←AddProjectOptions 1
+          :CaseList ⎕C¨'Commit' 'CurrentBranch' 'Diff' 'GoToGitHub' 'IsDirty' 'IsGitProject' 'ListBranches' 'Log' 'OpenGitShell' 'Status'
+              r,←AddProjectOptions 0
+          :Else
+              r,←⊂'There is no additional help available'
+          :EndSelect
+     
       :EndSelect
     ∇
 
-    ∇ r←AddProjectOptions dummy
+    ∇ r←AddLevel3HelpInfo fn
+      r←⊂''
+      r,←⊂'For more information execute:'
+      r,←⊂']Git.',fn,' -???'
+    ∇
+
+    ∇ r←AddProjectOptions flag
       r←''
+      r,←⊂'The ]Git.* user commands are particularly useful when used in conjunction with the project'
+      r,←⊂'management tool Cider, but it can be used without Cider. For that to work you must specify the'
+      r,←⊂'folder you wish the user command to act on.'
+      r,←⊂''
       r,←⊂'By default a user command will act on the currently opened Cider project if there is just one.'
       r,←⊂'If there are multiple open Cider projects the user will be asked which one to act on.'
       r,←⊂''
       r,←⊂'Once a default project got established and there are several Cider projects opened the user will'
       r,←⊂'be asked if she wants to act on the default project. If she refuses a list with all opened Cider'
       r,←⊂'projects will be presented to her.'
-      r,←⊂''
-      r,←⊂'You may specify a project for a command by setting -project=. It must be one of:'
-      r,←⊂' * The fully qualified path to a namespace that is an opened Cider project'
-      r,←⊂' * The path to a git-managed folder'
-      r,←⊂'   In this case it does not have to be an open Cider project, and not even a closed one.'
+      :If flag
+          r,←⊂''
+          r,←⊂'You may specify a project by setting -project=. It must be one of:'
+          r,←⊂' * The fully qualified path to a namespace that is an opened Cider project'
+          r,←⊂' * The path to a git-managed folder'
+          r,←⊂'   In this case it does not have to be an open Cider project, and not even a closed one.'
+      :EndIf
     ∇
 
     ∇ r←AtLeastVersion min;currentVersion

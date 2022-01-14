@@ -8,14 +8,14 @@
 ⍝ At the time of writing (2021-12-17) ⎕NDELETE refuses to delete read-only files
 ⍝ while "rmdir" does work with /Q (otherwise the user will be prompted for confirmation)
 ⍝ However, admin rights are required in any case.
- :If 0<⎕NC'∆TemDir'
-     {}⎕SH'rmdir /s /q "',∆TemDir,'"'
-⍝     (rc buff msg)←F.RmDir ∆TemDir
-⍝     ('Removing ',∆TemDir,' failed with ',msg,'; rc=',⍕buff)Assert 0=rc
+ :If 0<⎕NC'∆TempDir'
+     {}⎕SH'rmdir /s /q "',∆TempDir,'"'
+⍝     (rc buff msg)←F.RmDir ∆TempDir
+⍝     ('Removing ',∆TempDir,' failed with ',msg,'; rc=',⍕buff)Assert 0=rc
  :EndIf
 
  ⎕EX¨'AF'
- ⎕EX¨'∆Folder1' '∆Folder2' '∆TemDir'
+ ⎕EX¨'∆Folder1' '∆Folder2' '∆TempDir'
  #.⎕EX¨'Proj_1' 'Proj_2'
  ⎕EX'∆LINK_NOTIFY_WAS'
 ⍝Done

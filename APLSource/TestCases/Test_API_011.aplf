@@ -4,7 +4,7 @@
  R←T._Failed
 
  result←G.IsDirty ∆Folder2
- →T.PassesIf result=4
+ →T.PassesIf result
 
  R←T._OK
 ⍝Done

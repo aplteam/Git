@@ -16,7 +16,7 @@
  msg Assert rc=0
  →T.PassesIf(⍪⊂'* main')≡result
 
- ⎕SE.Git.SetDefaultProject #.Proj_2
+ 1 ⎕SE.Git.SetDefaultProject #.Proj_2
  (rc msg result)←stop ∆UCMD'ListBranches'
  msg Assert rc=0
  →T.GoToTidyUp(⍪⊂'* main')≢result
@@ -24,5 +24,5 @@
  R←T._OK
 
 ∆TidyUp:
- {}⎕SE.Git.SetDefaultProject''
+ {}1 ⎕SE.Git.SetDefaultProject''
 ⍝Done

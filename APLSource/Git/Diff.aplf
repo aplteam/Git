@@ -1,0 +1,17 @@
+ r←{verbose}Diff y;rc;more;path;⎕TRAP;short
+⍝ Returns a list with all files that are different compared with HEAD.
+⍝ If `verbose` is 1 (default is 0) then a full report is returned instead.
+⍝ `y` must be one of:
+⍝   * Fully qualfied name of a namespace  that is an opened Cider project
+⍝   * Fully qualified path to a Git-managed project
+⍝ `short` defaults to 0 which gives you a detailed report.
+ ⎕TRAP←(811 'E' '⎕DMX.EM ⎕signal 811')(0 'N')
+ verbose←{0<⎕NC ⍵:⍎⍵ ⋄ 0}'verbose'
+ path←U.GetProjectPath y
+ :If verbose
+     (rc more r)←U.RunGitCommand path'diff HEAD'
+ :Else
+     (rc more r)←U.RunGitCommand path'diff HEAD --name-only'
+ :EndIf
+ U.Assert 0=rc
+⍝Done

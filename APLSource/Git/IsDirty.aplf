@@ -12,8 +12,5 @@
  path←2⊃project
  (rc more buff)←U.RunGitCommand path'status --porcelain'
  U.Assert 0=rc
- r←0
- :If 0<≢buff←↑buff
-     r←(0<≢buff[;1]~' ?')+(2×0<≢buff[;2]~' ?')+(4×'?'∊buff[;2])
- :EndIf
+ r←0<≢buff
 ⍝Done

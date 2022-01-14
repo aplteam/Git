@@ -4,6 +4,7 @@
  r,←⊂'ChangeLog'
  r,←⊂'Commit'
  r,←⊂'CurrentBranch'
+ r,←⊂'Diff'
  r,←⊂'EstablishProject'
  r,←⊂'GetDefaultProject'
  r,←⊂'GetPathFromProject'
