@@ -1,5 +1,5 @@
  R←Test_API_011(stopFlag batchFlag);⎕TRAP;result
-⍝ Runs "Log"
+⍝ Runs "IsDirty"
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 

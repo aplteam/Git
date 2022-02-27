@@ -3,6 +3,7 @@
  r,←⊂'Add'
  r,←⊂'ChangeLog'
  r,←⊂'Commit'
+ r,←⊂'CompareBranches'
  r,←⊂'CurrentBranch'
  r,←⊂'Diff'
  r,←⊂'EstablishProject'
@@ -18,4 +19,5 @@
  r,←⊂'Methods'
  r,←⊂'OpenGitShell'
  r,←⊂'SetDefaultProject'
+ r,←⊂'Squash'
  r,←⊂'Status'

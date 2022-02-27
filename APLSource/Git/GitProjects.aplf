@@ -1,6 +1,5 @@
  r←GitProjects dummy;l
 ⍝ Returns all open Cider projects that are Git managed.\\
-⍝ The format is the same as the result of `]acre.Projects`.\\
  :If 0≠≢r←⎕SE.Cider.ListOpenProjects 0
      r←(IsGitProject¨r[;2])⌿r
  :EndIf

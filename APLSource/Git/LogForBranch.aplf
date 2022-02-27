@@ -1,0 +1,49 @@
+ r←{x}LogForBranch y;folder;noOf;branchName;cmd;rc;more;space;branches
+⍝ Returns Log information for a specific branch.\\
+⍝ Returns a matrix with four columns:
+⍝ 1. Commit hash
+⍝ 2. Committer
+⍝ 3. Commit date
+⍝ 4. Message\\
+⍝ The matrix will have zero to many rows.\\
+⍝ `y` can be one of:
+⍝ 1. A simple character vector. This is interpreted as a branch name
+⍝ 2. A vector of length two:
+⍝    1. A simple character vector. This is interpreted as a branch name
+⍝    2. A positive integer. This limits the number of commits to be returned (noOf).\\
+⍝       Returns always the **last** (or youngest) `noOf` commits.
+⍝ In case `branchName` is empty it's reporting for the current branch.\\
+⍝ For what `x` can actually be see `EstablishProject`.\\
+ x←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'x'
+ r←''
+ (space folder)←EstablishProject x
+ :If 0≠≢folder
+     :If 326=⎕DR y
+         (branchName noOf)←2↑y
+     :Else
+         branchName←y
+         noOf←⍬
+     :EndIf
+     branchName←{CurrentBranch folder}⍣(0=≢branchName)⊣branchName
+     :If (⍬≡noOf)∨''≡noOf
+         cmd←'log --first-parent ',(GetMainOrMaster folder),' --pretty=format:"',U.GetLogFormat,'"'
+     :Else
+         cmd←'log ',(GetMainOrMaster folder),'..',branchName,' --pretty=format:"',U.GetLogFormat,'"'
+     :EndIf
+ :ElseIf 1≠≢noOf
+ :OrIf ~(⎕DR noOf)∊83 163
+     'Invalid: "noOf": must be a negative integer'⎕SIGNAL 11
+ :Else
+     :If (⊂branchName)∊'main' 'master'
+         cmd←'log --first-parent -',(⍕|noOf),' ',(GetMainOrMaster folder),' --pretty=format:"',U.GetLogFormat,'"'
+     :Else
+         branches←(ListBranches folder)~¨⊂' *'
+         cmd←'log -',(⍕|noOf),' ',(GetMainOrMaster folder),'..',branchName,' --pretty=format:"',U.GetLogFormat,'"'
+     :EndIf
+ :EndIf
+ (rc more r)←U.RunGitCommand folder cmd
+ (∊more)U.Assert 0=rc
+ :If 0<≢r
+     r←↑U.FormatLog r
+ :EndIf
+⍝Done

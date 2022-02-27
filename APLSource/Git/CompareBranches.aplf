@@ -1,0 +1,72 @@
+ (filename1 filename2)←{x}CompareBranches y;space;folder;currentBranch;branch1;branch2;branches;thisBranch;hash1;hash2;noofBytes;flag;exe;alias;parms
+⍝ Allows the inspection of all differences between the two branches defined by `y`.\\
+⍝ `y` might be one of:
+⍝ * Empty vector; in that case it defaults to "main" and "dev".
+⍝ * A two-element vector each of which is a text vector with a branch name.\\
+⍝ Note that in case one of the branches specified is the current branch a dirty
+⍝ working directory is taken into account, **not** the latest commit.
+⍝ If you don't want this then stash the changes.\\
+⍝ For what `x` can actually be see `EstablishProject`.\\
+⍝ Returns either two empty vectors in case no difference was detected or two
+⍝ filenames otherwise.\\
+ x←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'x'
+ (space folder)←EstablishProject x
+ currentBranch←CurrentBranch folder
+ :If 0=≢y
+     :If 'main'≡currentBranch
+         (branch1 branch2)←'main' 'dev'
+     :ElseIf 'master'≡currentBranch  ⍝ Can go one day
+         (branch1 branch2)←'master' 'dev'
+     :Else
+         branches←(ListBranches folder)~¨⊂' *'
+         thisBranch←(⍸branches∊'main' 'master')⊃branches,⊂''
+         'Neither "main" nor "master" found'U.Assert 0<≢thisBranch
+         (branch1 branch2)←thisBranch currentBranch
+     :EndIf
+ :Else
+     (branch1 branch2)←2↑(⊆y),'' ''
+ :EndIf
+ 'Please specify two existing branches or a single empty vector'⎕SIGNAL 11/⍨0∊≢¨branch1 branch2
+ :Trap 11
+     :If 0=≢hash1←folder LogForBranch branch1 1
+         →0,⎕←'No commits found for ',branch1
+     :EndIf
+ :Else
+     (1↓⊃,/(⎕UCS 13),¨⎕DMX.DM)⎕SIGNAL 11
+ :EndTrap
+ :Trap 11
+     :If 0=≢hash2←folder LogForBranch branch2 1
+         →0,⎕←'No commits found for ',branch2
+     :EndIf
+ :Else
+     (1↓⊃,/(⎕UCS 13),¨⎕DMX.DM)⎕SIGNAL 11
+ :EndTrap
+ (hash1 hash2)←⊃¨hash1 hash2
+ :If hash1≢hash2
+     :If 0=≢list←folder DiffBetween branch1 branch2
+         ∆TestFlag U.Show'No changes found'
+         :Return
+     :EndIf
+     (filename1 filename2)←'txt'∘F.GetTempFilename2¨2⍴⊂''
+     noofBytes←CompareBranches_ list branch1 branch2 folder currentBranch hash1 hash2 filename1 filename2
+ :EndIf
+ :If 0<noofBytes
+     :If flag←9=⎕SE.⎕NC'CompareFiles'
+         :Trap 911
+             (exe alias)←⎕SE.CompareFiles.EstablishCompareEXE''
+         :Else
+             :Return
+         :EndTrap
+     :AndIf 0<≢exe
+         parms←⎕SE.CompareFiles.ComparisonTools.⍎'CreateParmsFor',alias
+         parms.(file1 file2)←filename1 filename2
+         parms.(use name)←exe alias
+         parms.(caption1 caption2)←branch1 branch2
+         ⎕SE.CompareFiles.Compare parms
+         :Trap 6 ⋄ F.DeleteFile filename2 ⋄ :EndTrap
+         filename1←filename2←''
+     :EndIf
+ :Else
+     ⎕←'No APL objects found to compare'
+ :EndIf
+⍝Done

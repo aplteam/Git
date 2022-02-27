@@ -1,5 +1,9 @@
  {r}←RunProcess(EXE command);cmd;folder;i;msg;op;p;pfn;re;ro;rtc;t;⎕IO;⎕USING;tfn;buff
-⍝ ⍺ ←→  Format result like ⎕CMD or not
+⍝ Runs EXE and returns a namespace with all sorts of variables, among them StdOut and StdErr.
+⍝ Requires .NET under Windows but not elsewhere.
+⍝ Cannot run in elevated mode because for that we would need to set i.Verb to 'runas' which
+⍝ we can't because "UseShellEexecute" must be set to 1 for this which we can't because we must
+⍝ redirect StdOut and StdErr, something we can only do with "UseShellEexecute←0"
 ⍝ ⍵[0] ←→ Executable
 ⍝ ⍵[1] ←→ Argument
  r←⎕NS''

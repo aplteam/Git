@@ -11,6 +11,7 @@
 ⍝ `noSelect` defaults to 0, meaning that the user will be presented a list of opened Cider projects ind case no
 ⍝ project can be established by other means. To supress this specify a 1 as ⍺.
  noSelect←{0<⎕NC ⍵:⍎⍵ ⋄ 0}'noSelect'
+ y←⍕y
  (namespace folder)←'' ''
  list←⎕SE.Cider.ListOpenProjects 0
  DEFAULT_PROJECT←{0<⎕NC ⍵:DEFAULT_PROJECT ⋄ ''}'DEFAULT_PROJECT'    ⍝ Initalise the default project as undefined

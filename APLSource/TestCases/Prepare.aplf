@@ -1,6 +1,7 @@
  Prepare;testPath;testFilename;ask;answer;⎕IO;⎕ML
 ⍝ Useful to prepare test cases for execution
  ⎕IO←1 ⋄ ⎕ML←1
+ ##.Git.InitializeGitUserCommand''
  T←⎕NEW Tester2 ⎕THIS
  testPath←(⊃1 ⎕NPARTS''),'TestResults'
  testFilename←testPath,'/CodeCoverage'

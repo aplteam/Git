@@ -1,7 +1,7 @@
 ﻿:Class Git_uc
 ⍝ User Command class for the project manager "Git"
 ⍝ Kai Jaeger ⋄ APL Team Ltd
-⍝ Version 0.2.0
+⍝ Version 0.3.0
 
     ⎕IO←1 ⋄ ⎕ML←1 ⋄ ⎕WX←3
     MinimumVersionOfDyalog←'18.0'
@@ -34,6 +34,14 @@
           c.Group←'Git'
           c.Parse←'1s -m= -add'
           c._Project←1
+          r,←c
+     
+          c←⎕NS''
+          c.Name←'CompareBranches'
+          c.Desc←'Compares two different branches'
+          c.Group←'Git'
+          c.Parse←'2s -project= -with='
+          c._Project←0
           r,←c
      
           c←⎕NS''
@@ -117,6 +125,14 @@
           r,←c
      
           c←⎕NS''
+          c.Name←'Squash'
+          c.Desc←'Squashes all commits in the current branch into a single one'
+          c.Group←'Git'
+          c.Parse←'1s -m='
+          c._Project←1
+          r,←c
+          
+          c←⎕NS''
           c.Name←'Status'
           c.Desc←'Reports all untracked files and/or all uncommited changes'
           c.Group←'Git'
@@ -136,8 +152,7 @@
 
     ∇ r←Run(Cmd Args);folder;G;space
       :Access Shared Public
-      ('Git needs at least version ',MinimumVersionOfDyalog,' of Dyalog APL')Assert AtLeastVersion⊃(//)⎕VFI MinimumVersionOfDyalog
-      G←LoadGitCode ⍬
+      G←LoadCode ⍬
       (r space folder)←GetSpaceAndFolder Cmd Args
       :If 0=≢r
           :Select ⎕C Cmd
@@ -147,6 +162,8 @@
               r←ChangeLog space folder Args
           :Case ⎕C'Commit'
               r←Commit space folder Args
+          :Case ⎕C'CompareBranches'
+              r←CompareBranches space folder Args
           :Case ⎕C'CurrentBranch'
               r←CurrentBranch space folder Args
           :Case ⎕C'Diff'
@@ -172,6 +189,8 @@
               r←OpenGitShell space folder Args
           :Case ⎕C'SetDefaultProject'
               r←G.SetDefaultProject{⍵/⍨0≠⍵}Args._1
+          :Case ⎕C'Squash'
+              r←⍪Squash space folder Args              
           :Case ⎕C'Status'
               r←⍪Status space folder Args
           :Case ⎕C'Version'
@@ -187,6 +206,68 @@
       parms.verbose←args.verbose
       parms.since←{0≡⍵:'' ⋄ ⍵}args.since
       r←parms G.Log folder
+    ∇
+
+    ∇ r←CompareBranches(space folder args);branch1;branch2;b;branches;ind
+      :If 0∊args.(_1 _2)                        ⍝ Any of the two required branch names undefined?
+          branches←2↓¨G.ListBranches folder
+          branches←{⍵/⍨~∨/¨'/\'∘∊¨⍵}branches    ⍝ Drop any path
+          :If 2>≢branches
+              r←'There is no branch to compare with'
+              :Return
+          :Else
+              :If ∧/args.(_1 _2)≡¨0                 ⍝ Both undefined?
+                  branch1←G.CurrentBranch folder    ⍝ The first one is then the current one
+                  :If (⊂branch1)∊'main' 'master'    ⍝ When the current one is either "main" or "master"...
+                      :If 2=≢branches               ⍝ ... and there are just two branches anyway...
+                          branch1←branches⊃⍨(branches⍳'main' 'master')~1+≢branches
+                          branch2←⊃branches~'main' 'master'
+                      :Else
+                          ind←'Select a branch:'Select branches
+                          :If 0=≢ind
+                              r←'Cancelled by user'
+                              :Return
+                          :Else
+                              branch2←ind⊃branches
+                          :EndIf
+                      :EndIf
+                  :Else
+                      branch2←branch1               ⍝ Current one is neither "main" nor "master", so we swap them
+                      branch1←branches⊃⍨(branches⍳'main' 'master')~1+≢branches
+                  :EndIf
+              :Else
+                  branch1←args._1
+                  :If (⊂branch1)∊'main' 'master'
+                      branch2←G.CurrentBranch folder    ⍝ The second one is then the current one
+                      :If (⊂branch2)∊'main' 'master'    ⍝ When the current one is either "main" or "master"...
+                          :If 2=≢branches               ⍝ ... and there are just two branches anyway...
+                              branch2←⊃branches~'main' 'master'
+                          :Else
+                              ind←'Select a branch:'Select branches~⊂branch1
+                              :If 0=≢ind
+                                  r←'Cancelled by user'
+                                  :Return
+                              :Else
+                                  branch2←ind⊃branches
+                              :EndIf
+                          :EndIf
+                      :Else
+                          branch2←branch1               ⍝ Current one is neither "main" nor "master", so we swap them
+                          branch1←branches⊃⍨(branches⍳'main' 'master')~1+≢branches
+                      :EndIf
+                  :Else
+                      branch2←branch1
+                      branch1←branches⊃⍨(branches⍳'main' 'master')~1+≢branches
+                  :EndIf
+              :EndIf
+          :EndIf
+      :Else
+          (branch1 branch2)←args.(_1 _2)
+      :EndIf
+      :If (,0)≢,Args.with
+          ⎕SE.CompareFiles.Use Args.with
+      :EndIf
+      r←folder G.CompareBranches branch1 branch2
     ∇
 
     ∇ (r space folder)←GetSpaceAndFolder(Cmd Args)
@@ -303,8 +384,11 @@
                           r←'Commit cancelled by user'
                           :Return
                       :EndIf
-                  :Else
+                  :ElseIf YesOrNo'Sure you don''t want to provide a nessage? ("No" cancells the whole operation)'
                       flag←1
+                  :Else
+                      r←'Operation cancelled by user'
+                      :Return
                   :EndIf
                   msg←{0=≢⍵:'...' ⋄ ⍵}msg
                   msg←1↓∊(⎕UCS 10),¨msg
@@ -320,6 +404,10 @@
       short←Args.Switch'short'
       r←short G.Status folder
     ∇
+    
+    ∇ r←Squash(space folder args)
+      r←G.Squash folder
+    ∇
 
     ∇ r←ListBranches(space folder args)
       r←⍪G.ListBranches folder
@@ -333,8 +421,12 @@
           :Select ⎕C Cmd
           :Case ⎕C'Add'
               r,←⊂']Git.add <filter> -project='
+          :Case ⎕C'ChangeLog <apl-name> -project='
+              r,←⊂']Git.ChangeLog <filter> -project='
           :Case ⎕C'Commit'
-              r,←⊂']Git.Commit [spcace|folder] -m= -add'
+              r,←⊂']Git.Commit [space|folder] -m= -add'
+          :Case ⎕C'CompareBranches'
+              r,←⊂']Git.CompareBranches [branch1] [branch2] =project='
           :Case ⎕C'CurrentBranch'
               r,←⊂']Git.CurrenBranch [space|folder]'
           :Case ⎕C'Diff'
@@ -357,6 +449,8 @@
               r,←⊂']Git.SetDefaultProject [space|folder]'
           :Case ⎕C'Status'
               r,←⊂']Git.Status -short -path='
+          :Case ⎕C'Squash'
+              r,←⊂']Git.Squash [space|folder]'              
           :Else
               r,←⊂'There is no help available'
           :EndSelect
@@ -376,6 +470,13 @@
               r,←⊂' * A "." (dot), meaning that all so far untracked files should be added'
               r,←⊂''
               r,←AddLevel3HelpInfo'Add'
+          :Case ⎕C'ChangeLog'
+              r,←⊂'Takes an APL name and returns a matrix with zero or more rows and 4 columns with'
+              r,←⊂'information regarding all commits the given APL object was changed:'
+              r,←⊂' 1. Hash'
+              r,←⊂' 2. Commiter''s name'
+              r,←⊂' 3. Date of the commit date in strict ISO 8601 format'
+              r,←⊂' 4. Message of the commit'
           :Case ⎕C'Commit'
               r,←⊂'Record changes to the repository.'
               r,←⊂'The branch must not be dirty (see ]Git.IsDirty) but if it is anyway the user will be'
@@ -392,6 +493,17 @@
               r,←⊂'be empty for other branches. Empty messages will become "...".'
               r,←⊂''
               r,←AddLevel3HelpInfo'Commit'
+          :Case ⎕C'CompareBranches'
+              r,←⊂'Compare all changes between two branches.'
+              r,←⊂''
+              r,←⊂'You may specify two branches, but you may also specify just one branch, say "foo".'
+              r,←⊂'In that case "foo" is compared with "main".'
+              r,←⊂'You may also omit both branches; in that case "main" is compared with "dev". If "dev"'
+              r,←⊂'does not exist an error is thrown.'
+              r,←⊂''
+              r,←⊂' * If there is just one open Cider project it is taken'
+              r,←⊂' * If there are several open Cider projects the user is interrogated'
+              r,←⊂' * You may specify a particular project with =project=[ProjectName|ProjectFolder]'
           :Case ⎕C'CurrentBranch'
               r,←⊂'Returns the name of the current branch'
               r,←⊂''
@@ -453,6 +565,13 @@
               r,←⊂'By default a verbose report is printed.'
               r,←⊂'Specify -short for getting just the essentials.'
               r,←AddLevel3HelpInfo'Status'
+          :Case ⎕C'Squash'
+              r,←⊂'Squashes all commits exclusive for the current branch into a single one.'
+              r,←⊂'The current branch MUST be neither "main" nor "master".'
+              r,←⊂''
+              r,←⊂'You may specify a message with -m="my message", but if you don''t you will be given an edit'
+              r,←⊂'window for specifying a message.'
+              r,←AddLevel3HelpInfo'Status'              
           :Else
               r,←⊂'There is no additional help available'
           :EndSelect
@@ -460,7 +579,7 @@
           :Select ⎕C Cmd
           :CaseList ⎕C¨'Add' ''
               r,←AddProjectOptions 1
-          :CaseList ⎕C¨'Commit' 'CurrentBranch' 'Diff' 'GoToGitHub' 'IsDirty' 'IsGitProject' 'ListBranches' 'Log' 'OpenGitShell' 'Status'
+          :CaseList ⎕C¨'Commit' 'CurrentBranch' 'Diff' 'GoToGitHub' 'IsDirty' 'IsGitProject' 'ListBranches' 'Log' 'OpenGitShell' 'Squash' 'Status'
               r,←AddProjectOptions 0
           :Else
               r,←⊂'There is no additional help available'
@@ -520,13 +639,12 @@
       path,←(~(¯1↑path)∊'/\')/'/'
     ∇
 
-    ∇ G←LoadGitCode dummy;res;folder;msg;⎕TRAP
+    ∇ G←LoadCode dummy;res;folder;msg
       :If 0=⎕SE.⎕NC'_Git'
           G←'_Git'⎕SE.⎕NS''
-          folder←¯1↓1⊃⎕NPARTS ##.SourceFile ⍝ ,'APLSource'
+          folder←¯1↓1⊃⎕NPARTS ##.SourceFile
           res←({⍵.overwrite←1 ⋄ ⍵}⎕NS'')⎕SE.Link.Import G folder
           'Could not import the Git application code'Assert∨/'Imported:'⍷res
-          ⎕TRAP←0 'S'
           ⎕SE.Tatin.LoadDependencies((1⊃⎕NPARTS ##.SourceFile),'packages')'⎕se._Git.APLSource'
           ⎕SE.Git←⎕SE._Git.APLSource.API          ⍝ Establish the API
           {}⎕SE.Git.InitializeGitUserCommand''
@@ -646,14 +764,6 @@
           space←data
           folder←G.GetPathFromProject space
       :EndIf
-    ∇
-
-    ∇ int←IntToBits bits
-      int←⌽(32⍴2)⊤bits
-    ∇
-
-    ∇ bits←BitsToInt int
-      bits←(32⍴2)⊥⌽32↑int
     ∇
 
 :EndClass

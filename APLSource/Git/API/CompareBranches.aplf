@@ -1,0 +1,1 @@
+ CompareBranches←{⍺←⊣ ⋄ ⍺ ##.CompareBranches ⍵}
