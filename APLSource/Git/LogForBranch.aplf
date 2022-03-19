@@ -35,10 +35,10 @@
      'Invalid: "noOf": must be a negative integer'⎕SIGNAL 11
  :Else
      :If (⊂branchName)∊'main' 'master'
-         cmd←'log --first-parent -',(⍕|noOf),' ',(GetMainOrMaster folder),' --pretty=format:"',U.GetLogFormat,'"'
+         cmd←'log --first-parent ',(GetMainOrMaster folder),' -n ',(⍕noOf),' --pretty=format:"',U.GetLogFormat,'"'
      :Else
          branches←(ListBranches folder)~¨⊂' *'
-         cmd←'log -',(⍕|noOf),' ',(GetMainOrMaster folder),'..',branchName,' --pretty=format:"',U.GetLogFormat,'"'
+         cmd←'log -n ',(⍕|noOf),' ',(GetMainOrMaster folder),'..',branchName,' --pretty=format:"',U.GetLogFormat,'"'
      :EndIf
  :EndIf
  (rc more r)←U.RunGitCommand folder cmd

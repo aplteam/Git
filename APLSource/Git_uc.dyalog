@@ -131,7 +131,7 @@
           c.Parse←'1s -m='
           c._Project←1
           r,←c
-          
+     
           c←⎕NS''
           c.Name←'Status'
           c.Desc←'Reports all untracked files and/or all uncommited changes'
@@ -190,7 +190,7 @@
           :Case ⎕C'SetDefaultProject'
               r←G.SetDefaultProject{⍵/⍨0≠⍵}Args._1
           :Case ⎕C'Squash'
-              r←⍪Squash space folder Args              
+              r←⍪Squash space folder Args
           :Case ⎕C'Status'
               r←⍪Status space folder Args
           :Case ⎕C'Version'
@@ -384,7 +384,7 @@
                           r←'Commit cancelled by user'
                           :Return
                       :EndIf
-                  :ElseIf YesOrNo'Sure you don''t want to provide a nessage? ("No" cancells the whole operation)'
+                  :ElseIf YesOrNo'Sure you don''t want to provide a message? ("No" cancells the whole operation)'
                       flag←1
                   :Else
                       r←'Operation cancelled by user'
@@ -404,9 +404,9 @@
       short←Args.Switch'short'
       r←short G.Status folder
     ∇
-    
+
     ∇ r←Squash(space folder args)
-      r←G.Squash folder
+      r←folder G.Squash{0≡⍵:'' ⋄ ⍵}args._1
     ∇
 
     ∇ r←ListBranches(space folder args)
@@ -450,7 +450,7 @@
           :Case ⎕C'Status'
               r,←⊂']Git.Status -short -path='
           :Case ⎕C'Squash'
-              r,←⊂']Git.Squash [space|folder]'              
+              r,←⊂']Git.Squash [space|folder]'
           :Else
               r,←⊂'There is no help available'
           :EndSelect
@@ -571,7 +571,7 @@
               r,←⊂''
               r,←⊂'You may specify a message with -m="my message", but if you don''t you will be given an edit'
               r,←⊂'window for specifying a message.'
-              r,←AddLevel3HelpInfo'Status'              
+              r,←AddLevel3HelpInfo'Status'
           :Else
               r,←⊂'There is no additional help available'
           :EndSelect

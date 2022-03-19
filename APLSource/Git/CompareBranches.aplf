@@ -7,8 +7,7 @@
 ⍝ working directory is taken into account, **not** the latest commit.
 ⍝ If you don't want this then stash the changes.\\
 ⍝ For what `x` can actually be see `EstablishProject`.\\
-⍝ Returns either two empty vectors in case no difference was detected or two
-⍝ filenames otherwise.\\
+⍝ Returns either two empty vectors in case no difference was detected or two filenames otherwise.\\
  x←{0<⎕NC ⍵:⍎⍵ ⋄ ''}'x'
  (space folder)←EstablishProject x
  currentBranch←CurrentBranch folder
@@ -29,17 +28,17 @@
  'Please specify two existing branches or a single empty vector'⎕SIGNAL 11/⍨0∊≢¨branch1 branch2
  :Trap 11
      :If 0=≢hash1←folder LogForBranch branch1 1
-         →0,⎕←'No commits found for ',branch1
+         ('No commits found for branch "',branch1,'"')U.Assert 0
      :EndIf
  :Else
-     (1↓⊃,/(⎕UCS 13),¨⎕DMX.DM)⎕SIGNAL 11
+     (1↓⊃,/(⎕UCS 13),¨⎕DMX.DM)U.Assert 0
  :EndTrap
  :Trap 11
      :If 0=≢hash2←folder LogForBranch branch2 1
-         →0,⎕←'No commits found for ',branch2
+         ('No commits found for branch "',branch2,'"')U.Assert 0
      :EndIf
  :Else
-     (1↓⊃,/(⎕UCS 13),¨⎕DMX.DM)⎕SIGNAL 11
+     (1↓⊃,/(⎕UCS 13),¨⎕DMX.DM)U.Assert 0
  :EndTrap
  (hash1 hash2)←⊃¨hash1 hash2
  :If hash1≢hash2

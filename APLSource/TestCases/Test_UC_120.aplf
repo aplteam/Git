@@ -1,25 +1,39 @@
- R←Test_UC_120(stopFlag batchFlag);⎕TRAP;stop;rc;msg;buff;was;tempDir
-⍝ Runs "]GetDefaultProject and "]SetDefaultProject"
+ R←Test_UC_120(stopFlag batchFlag);⎕TRAP;stop;rc;msg;buff;was;tempDir;result
+⍝ Runs "]Squash"
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
+ R←T._NotImplemented
+ :Return
+ ⍝ ⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹⌹
+
  tempDir←##.FilesAndDirs.GetTempSubDir'Git-Tests'
  (⊂'This' 'and that')⎕NPUT tempDir,'/foo.txt'
- (⊂'r←Hello' 'r←''World''')⎕NPUT tempDir,'/Hello.aplf'
+ (⊂'r←Hello' 'r←''You''')⎕NPUT tempDir,'/Hello.aplf'
  {}⎕SH'git -C "',(##.FilesAndDirs.EnforceSlash tempDir),'" init '
 
- stop←0
- (rc msg was)←stop ∆UCMD'GetDefaultProject'
- msg Assert rc=0
+ (rc msg result)←G.U.RunGitCommand tempDir'Branch --create dev'
+ Assert 0=rc
 
- (rc msg buff)←stop ∆UCMD'SetDefaultProject ',tempDir
+ (⊂'r←Hello' 'r←''World''')⎕NPUT(tempDir,'/Hello.aplf')1
+ result←'First commit'G.Commit
+ ∘∘∘
+
+ (⊂'r←Hello' 'r←''Galaxy''')⎕NPUT(tempDir,'/Hello.aplf')1
+ result←'Second commit'G.Commit
+
+
+ (⊂'r←Hello' 'r←''Universe''')⎕NPUT(tempDir,'/Hello.aplf')1
+ result←'Third commit'G.Commit
+
+ stop←0
+ (rc msg buff)←stop ∆UCMD'Sqash "',tempDir,'" -m="Squashed message"'
  msg Assert rc=0
- →T.GoToTidyUp 2≠≢buff
- →T.GoToTidyUp 0=≢∊buff∘∘∘
+ →T.GoToTidyUp 0<≢msg
+ →T.GoToTidyUp'yes'≢buff
 
  R←T._OK
 
 ∆TidyUp:
- {}∆UCMD'SetDefaultProject ',was
  {}⎕SH'rmdir /s /q "',tempDir,'"'
 ⍝Done

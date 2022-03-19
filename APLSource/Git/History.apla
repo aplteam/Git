@@ -1,7 +1,7 @@
 (
- '* 0.3.0 ⋄ 2022-02-26'
- '  * Method `CompareBranches` added'
+ '* 0.3.0 ⋄ 2022-03-18'
  '  * Method `CheckLatestChanges` added'
+ '  * Test cases added'
  '* 0.2.0 ⋄ 2022-01-14'
  '  * All functions act now also on Git-managed folders (being a Cider project is not a requirement anymore)'
  '  * Function "Diff" added'
