@@ -1,7 +1,7 @@
 ﻿:Class Git_uc
 ⍝ User Command class for the project manager "Git"
 ⍝ Kai Jaeger ⋄ APL Team Ltd
-⍝ Version 0.3.0
+⍝ Version 0.3.1 ⋄ 2022-03-20
 
     ⎕IO←1 ⋄ ⎕ML←1 ⋄ ⎕WX←3
     MinimumVersionOfDyalog←'18.0'
@@ -42,7 +42,7 @@
           c.Group←'Git'
           c.Parse←'2s -project= -with='
           c._Project←0
-          r,←c
+          ⍝    r,←c
      
           c←⎕NS''
           c.Name←'CurrentBranch'
@@ -130,7 +130,7 @@
           c.Group←'Git'
           c.Parse←'1s -m='
           c._Project←1
-          r,←c
+          ⍝     r,←c
      
           c←⎕NS''
           c.Name←'Status'
